@@ -1,0 +1,49 @@
+# Dependencies
+/node_modules/
+
+# Next.js output
+/.next/
+/out/
+/build/
+
+# Test output
+/coverage/
+/playwright-report/
+/test-results/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Supabase local state
+/supabase/.branches/
+/supabase/.temp/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Editors and operating systems
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Hosting and tooling
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+
+# Sensitive key material
+*.pem
+*.key
+*.p12
+*.pfx
+
+# User specific files
+agents-guidelines/
+AGENTS.md
