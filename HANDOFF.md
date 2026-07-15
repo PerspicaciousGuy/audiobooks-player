@@ -2,53 +2,135 @@
 
 ## Project Overview
 
-Quiet Library is a responsive web audiobook player and installable PWA for people who keep their own audiobook files in Google Drive. Users will authenticate with Google, explicitly select their own audiobook files, and stream or download them while Quiet Library synchronizes metadata, progress, bookmarks, and preferences.
-
-The approved technical direction is a hybrid backend: Next.js owns application APIs, Drive OAuth, import, Range streaming, and synchronization; Supabase provides Google identity, SSR sessions, managed Postgres, SQL migrations/types, and RLS. The approved visual direction is a warm editorial desktop/mobile interface.
+Quiet Library is a responsive, installable web audiobook player for people who
+keep their own audio files in Google Drive. Next.js owns the application APIs,
+Drive OAuth, imports, Range streaming, offline downloads, and synchronization.
+Supabase provides Google identity, SSR sessions, managed Postgres, migrations,
+and RLS. Source audio stays in Drive; explicit offline copies stay only in the
+user's browser profile.
 
 ## Current State
 
-- Phase 0 is complete on branch `feat/phase-0-foundation` and published to `https://github.com/PerspicaciousGuy/audiobooks-player.git` through a draft pull request targeting `main`.
-- Next.js 15.5.20, React 19.1.0, TypeScript 5.9.3, Tailwind CSS 4.3.1, Zod 4.4.3, and the Supabase CLI 2.109.1 are pinned with npm 11.6.1 and Node 24.
-- Public `/`, application `/app`, and unauthenticated `/health` route foundations are implemented.
-- Strict TypeScript, ESLint, Prettier with Tailwind ordering, environment validation, security headers, design tokens, and a pull-request CI workflow are configured.
-- The local Supabase CLI layout exists and is intentionally not linked to a remote project.
-- `npm ci`, formatting, lint, typecheck, production build, dependency audit, and live route smoke checks pass.
-- No authentication, database migrations, Google integration, production UI, player, tests, or PWA service worker has been implemented.
+- The planned local implementation for Phases 0-7 is complete. Phase 0 is on
+  `origin/main`; the later local checkpoint commits are on
+  `feat/phase-1-visual-shell` and have not been pushed.
+- Direct pushes to `main` are permitted only when the user explicitly asks to
+  push or sync directly. Force-pushing `main` is prohibited.
+- Phase 1 provides the responsive warm-editorial landing and application UI for
+  desktop and mobile, including principal empty/loading/error states, live
+  library search/filters, mobile account navigation, editable book details,
+  account-backed preferences, theme selection, and keyboard/reduced-motion
+  accessibility behavior.
+- Phase 2 provides Supabase SSR authentication, normalized/RLS-protected data,
+  and a separate user-bound Drive OAuth flow with PKCE, exact scopes, encrypted
+  credentials, reconnect, and revoke-before-delete.
+- Phase 3 provides explicit Google Picker selection, server-side Drive
+  validation, bounded ID3/chapter parsing, editable grouping, duplicate checks,
+  transactional import, and real library reads.
+- Phase 4 provides an authenticated owned-file Range proxy and one shared audio
+  engine with seeking, chapters, multi-file continuation, rate, volume, Media
+  Session, and sleep timers.
+- Phase 5 provides atomic versioned progress, stale-write rejection, a bounded
+  newest-per-book retry queue, exact resume, completion, and bookmarks.
+- Phase 6 provides the manifest/install/update flow, deliberately scoped service
+  worker, offline fallback, authenticated downloads, Dexie metadata, OPFS with
+  Cache Storage fallback, storage feedback, reconciliation, and offline
+  multi-file playback.
+- Phase 7 provides cursor-paginated library/detail/correction APIs, account
+  deletion with Drive revocation and Auth/database cascade, same-origin mutation
+  checks, private atomic Postgres quotas, CSP/HSTS/cross-origin headers,
+  allowlisted JSON events, redaction and accessibility tests, expanded legal
+  content, consistent RFC 9457 errors, a security policy, and
+  deployment/OAuth/incident guides. Preference writes use the same
+  authenticated, same-origin, validated, and rate-limited API boundary.
+- CI runs quality, tests, build, production HTTP smoke, and production audit for
+  pull requests and direct pushes to `main`. A separate clean Supabase job
+  applies migrations and runs all pgTAP/RLS tests.
 
 ## Last Action
 
-Completed Phase 0. Created the pinned Next.js foundation and lockfile, strict configuration, Tailwind design-token source, environment template/validation, marketing and application route groups, health handler, README, CI workflow, and Supabase local configuration. Added a PostCSS 8.5.10 override for the current moderate advisory and pinned Tailwind 4.3.1 because 4.3.2 produced an invalid optional-dependency lock graph under npm 11.6.1.
+Closed the remaining provider-independent verification and API-contract gaps.
+Added behavior tests for pending player state, end-of-chapter and duration sleep
+timers, multi-file advancement, versioned progress validation, exact Drive OAuth
+scope/PKCE/token behavior, server-side Drive file validation, and bounded stream
+retry after a rejected access token.
 
-Verification completed with `npm ci`, `npm run verify`, `npm audit --omit=dev --audit-level=high`, Supabase CLI version output, and live requests to `/`, `/app`, and `/health`. The health endpoint returned `200`, `{"status":"ok"}`, and `Cache-Control: no-store`.
+Added a dependency-free production smoke runner and made it part of `verify`
+and CI. It starts the built app, checks health, public/legal/PWA resources,
+manifest install metadata, security headers, and anonymous API protection, then
+stops the process. The runner exposed inconsistent API error media types; every
+versioned route now returns standard RFC 9457 fields with
+`application/problem+json`, import endpoints handle malformed JSON explicitly,
+and client error handling consumes the standard `detail` field.
 
-Connected the local repository to GitHub, preserved the remote `main` license commit, committed the Phase 0 codebase on `feat/phase-0-foundation`, and published it for review without force-pushing or committing user-specific agent rules.
+## Verification
 
-## In Progress
+- `npm run verify`: formatting, ESLint, strict TypeScript, 64 tests in 25 files,
+  the 28-route production build, and the production HTTP smoke check pass.
+- `npm run test:coverage`: passed; current measured coverage is 71.31%
+  statements, 58.8% branches, 67.21% functions, and 73.8% lines.
+- `npm audit --audit-level=high`: zero vulnerabilities.
+- Repeatable production HTTP smoke: public/legal/PWA resources return `200`;
+  protected APIs return RFC 9457 `401` responses anonymously; CSP, one-year
+  HSTS, COOP, CORP, content-type, referrer, and permissions headers are present.
+  The manifest and service worker are served successfully, with
+  authenticated/Range/audio caching excluded by design.
+- Repository audit: `git diff --check` passes, no TS/TSX file exceeds 200 lines,
+  and no API-key, private-key, or JWT-shaped secret was found.
+- Development and production servers are stopped.
 
-Nothing. Phase 0 is complete and the development server has been stopped.
+## External Release Gates
 
-## Pending
+Local implementation is complete, but release is not approved until the
+following checks run against real infrastructure:
 
-1. Review and merge the Phase 0 draft pull request when ready.
-2. Execute Phase 1 as a separately approved task: production landing page and responsive application UI shells with mock data.
-3. Install Docker Desktop or a compatible runtime before local Supabase services are required in Phase 2.
-4. Configure Google and remote Supabase credentials only in their approved phases.
-5. Add test tooling and tests with the features they verify, following `IMPLEMENTATION_PLAN.md`.
+1. Select a Node streaming host, canonical domain, Supabase plan/region, log
+   retention, and backup retention.
+2. Apply migrations to staging, generate database types, run all pgTAP/RLS
+   tests, and test rollback/recovery. Docker is unavailable locally, so only the
+   configured CI/staging job can currently execute these checks.
+3. Configure Supabase Google identity plus Drive OAuth/Picker clients and verify
+   sign-in, restoration, sign-out, consent, import, reconnect, revocation, and
+   account deletion with disposable data.
+4. Validate large-file Range streaming, full downloads, host concurrency,
+   timeout, bandwidth, and egress behavior.
+5. Use two authenticated sessions to prove stale-write rejection, progress
+   restoration, and bookmark isolation.
+6. Reconfirm the passing local visuals on representative physical devices and
+   prove PWA install, update, partial cleanup, quota failure, eviction, source
+   changes, and airplane-mode multi-file playback.
 
-## Known Issues
+Follow `docs/DEPLOYMENT.md` for the release order,
+`docs/GOOGLE_OAUTH_VERIFICATION.md` for Google setup/evidence, and
+`docs/OPERATIONS.md` for monitoring and incidents.
 
-- Docker is not installed, so `supabase start` and local database/auth container verification cannot run yet. `supabase init` and CLI 2.109.1 were verified.
-- The `/` and `/app` screens are intentional Phase 0 foundations, not the approved production UI.
-- The generated landing-page concept used a static 2024 footer year; Phase 1 must use the current year dynamically.
-- OGG and some audiobook codecs are not uniformly supported across browsers; runtime capability detection remains required.
-- Final hosting must be validated for long-lived Range streaming, bandwidth, concurrency, and egress cost.
-- `IMPLEMENTATION_PLAN.md` is over the generic 500-line guideline after Markdown formatting; it remains one cohesive planning responsibility and was not split during Phase 0.
+## Known Constraints
+
+- No Docker, hosted Supabase project, Google OAuth clients, production domain,
+  or deploy target are configured. No credentials were invented or committed.
+- The in-app browser integration package is missing its required browser client.
+  An earlier isolated headless Chrome session supplied exact desktop/mobile
+  screenshots and DOM interaction evidence; repeatable Playwright journeys and
+  physical-device accessibility/performance/install/offline-audio checks remain
+  external.
+- Unknown dynamic audiobook pages currently render noindex not-found UI with a
+  streamed HTTP `200`; retain this known Next.js behavior unless a host-level
+  hard `404` requirement is added.
+- Browser codec support varies, especially for OGG and some audiobook formats;
+  final capability behavior requires representative devices and files.
+- `IMPLEMENTATION_PLAN.md` exceeds the generic 500-line guideline but remains a
+  single cohesive planning artifact.
 
 ## Files Status
 
-- Created: `AGENTS.md`, `agents-guidelines/`, `IMPLEMENTATION_PLAN.md`, `HANDOFF.md`, `.editorconfig`, `.env.example`, `.gitignore`, `.nvmrc`, `.prettierignore`, `.github/workflows/ci.yml`, `README.md`, `package.json`, `package-lock.json`, `tsconfig.json`, `eslint.config.mjs`, `prettier.config.mjs`, `postcss.config.mjs`, `next.config.ts`, `next-env.d.ts`, `src/app/globals.css`, `src/app/layout.tsx`, `src/app/(marketing)/layout.tsx`, `src/app/(marketing)/page.tsx`, `src/app/(application)/app/layout.tsx`, `src/app/(application)/app/page.tsx`, `src/app/health/route.ts`, `src/lib/config/environment.ts`, `supabase/config.toml`, `supabase/.gitignore`
-- Modified: `IMPLEMENTATION_PLAN.md` (formatted and marked Phase 0 complete with Phase 1 as the next slice), `HANDOFF.md` (Phase 0 and GitHub publication checkpoint)
-- Currently Being Edited: none
-- Planned to Edit: Phase 1 UI route/components and design tokens after explicit approval
-- Untouched: `AGENTS.md`, all files under `agents-guidelines/`
+- Created: player/progress/Drive/OAuth/stream contract tests, the RFC 9457
+  response helper and tests, the test-only server boundary, and the production
+  HTTP smoke runner.
+- Modified: all versioned API error paths and their client consumers, import JSON
+  handling, Vitest server-module resolution, package scripts, CI, README,
+  implementation plan, and this handoff.
+- Currently being edited: none.
+- Next work: external staging/provider/browser validation only, followed by fixes
+  if those evidence-based checks find issues.
+- Untouched: real credentials, remote branches, production services, and user
+  Google Drive files.

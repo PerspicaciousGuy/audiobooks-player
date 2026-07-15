@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+
+import HowItWorks from "@/components/marketing/HowItWorks";
+import MarketingFooter from "@/components/marketing/MarketingFooter";
+import MarketingHeader from "@/components/marketing/MarketingHeader";
+import PrivacyPromise from "@/components/marketing/PrivacyPromise";
+import ProductPreview from "@/components/marketing/ProductPreview";
+import ActionLink from "@/components/ui/ActionLink";
+import Icon from "@/components/ui/Icon";
 
 export const metadata: Metadata = {
   title: "Your audiobooks. Your Drive. Your place.",
@@ -9,27 +16,65 @@ export const metadata: Metadata = {
 
 export default function LandingPage() {
   return (
-    <main className="bg-paper text-ink px-page-gutter min-h-screen py-16">
-      <section className="max-w-content mx-auto flex flex-col gap-8">
-        <p className="text-action-strong text-sm font-semibold tracking-wide uppercase">
-          Phase 0 foundation
-        </p>
-        <div className="flex max-w-3xl flex-col gap-4">
-          <h1 className="font-display text-5xl leading-tight font-semibold sm:text-6xl">
-            Your audiobooks. Your Drive. Your place.
-          </h1>
-          <p className="text-ink-muted max-w-2xl text-lg leading-relaxed">
-            The production landing page arrives in Phase 1. This route confirms
-            the public shell, typography tokens, and responsive foundation.
+    <div className="bg-paper text-ink min-h-screen">
+      <MarketingHeader />
+      <main>
+        <section className="px-page-gutter mx-auto grid max-w-7xl items-center gap-10 pt-12 pb-20 lg:grid-cols-2 lg:pt-20 lg:pb-28">
+          <div className="flex flex-col items-start gap-7">
+            <p className="text-action-strong flex items-center gap-2 text-xs font-bold tracking-widest uppercase">
+              <Icon className="size-4" name="sparkles" />A calmer home for every
+              story
+            </p>
+            <div className="flex flex-col gap-5">
+              <h1 className="font-display text-5xl leading-none font-semibold tracking-tight sm:text-6xl lg:text-7xl">
+                Your audiobooks.
+                <br />
+                Your Drive.
+                <br />
+                <span className="text-action-strong">Your place.</span>
+              </h1>
+              <p className="text-ink-muted max-w-xl text-lg leading-relaxed">
+                Turn the audiobook files you already own into a beautiful,
+                private library that remembers where every story left you.
+              </p>
+            </div>
+            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+              <ActionLink
+                href="/auth/sign-in?next=/app/onboarding"
+                icon={<Icon className="size-4" name="arrow-right" />}
+              >
+                Connect Google Drive
+              </ActionLink>
+              <ActionLink href="/app" variant="secondary">
+                Preview the library
+              </ActionLink>
+            </div>
+            <p className="text-ink-muted flex items-center gap-2 text-xs">
+              <Icon className="text-success size-4" name="shield" />
+              You choose each file. Quiet Library never scans your full Drive.
+            </p>
+          </div>
+          <ProductPreview />
+        </section>
+        <HowItWorks />
+        <PrivacyPromise />
+        <section className="px-page-gutter mx-auto flex max-w-4xl flex-col items-center gap-6 py-24 text-center sm:py-32">
+          <p className="text-action-strong text-xs font-bold tracking-widest uppercase">
+            Ready when your next chapter is
           </p>
-        </div>
-        <Link
-          className="bg-action text-paper-elevated hover:bg-action-strong focus-visible:ring-focus rounded-control duration-standard inline-flex min-h-11 w-fit items-center justify-center px-5 font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none"
-          href="/app"
-        >
-          Preview app shell
-        </Link>
-      </section>
-    </main>
+          <h2 className="font-display text-4xl leading-tight font-semibold sm:text-6xl">
+            Bring your books. Keep your place.
+          </h2>
+          <p className="text-ink-muted max-w-xl leading-relaxed">
+            Your personal listening library begins with the files you already
+            own and the stories you already love.
+          </p>
+          <ActionLink href="/auth/sign-in?next=/app/onboarding">
+            Connect Google Drive
+          </ActionLink>
+        </section>
+      </main>
+      <MarketingFooter />
+    </div>
   );
 }
