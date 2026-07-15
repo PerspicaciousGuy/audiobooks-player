@@ -9,6 +9,7 @@ The approved technical direction is a hybrid backend: Next.js owns application A
 ## Current State
 
 - Phase 0 is complete on branch `feat/phase-0-foundation` and published to `https://github.com/PerspicaciousGuy/audiobooks-player.git` through a draft pull request targeting `main`.
+- This personal repository permits a normal direct push to `main` when the user explicitly asks to push or sync directly; pull requests remain the default for ambiguous requests, and force-pushing `main` remains prohibited.
 - Next.js 15.5.20, React 19.1.0, TypeScript 5.9.3, Tailwind CSS 4.3.1, Zod 4.4.3, and the Supabase CLI 2.109.1 are pinned with npm 11.6.1 and Node 24.
 - Public `/`, application `/app`, and unauthenticated `/health` route foundations are implemented.
 - Strict TypeScript, ESLint, Prettier with Tailwind ordering, environment validation, security headers, design tokens, and a pull-request CI workflow are configured.
@@ -18,11 +19,7 @@ The approved technical direction is a hybrid backend: Next.js owns application A
 
 ## Last Action
 
-Completed Phase 0. Created the pinned Next.js foundation and lockfile, strict configuration, Tailwind design-token source, environment template/validation, marketing and application route groups, health handler, README, CI workflow, and Supabase local configuration. Added a PostCSS 8.5.10 override for the current moderate advisory and pinned Tailwind 4.3.1 because 4.3.2 produced an invalid optional-dependency lock graph under npm 11.6.1.
-
-Verification completed with `npm ci`, `npm run verify`, `npm audit --omit=dev --audit-level=high`, Supabase CLI version output, and live requests to `/`, `/app`, and `/health`. The health endpoint returned `200`, `{"status":"ok"}`, and `Cache-Control: no-store`.
-
-Connected the local repository to GitHub, preserved the remote `main` license commit, committed the Phase 0 codebase on `feat/phase-0-foundation`, and published it for review without force-pushing or committing user-specific agent rules.
+Added a project-specific Git policy exception to `AGENTS.md` and `agents-guidelines/core/git-rules.md`: when the user explicitly requests a direct push or sync to `main`, agents may do so after fetching and verifying the remote state, diff, secrets, and relevant checks. The exception permits only a normal non-force push; a pull request remains the default when the request is ambiguous. The existing draft pull request and remote branches were not changed.
 
 ## In Progress
 
@@ -30,7 +27,7 @@ Nothing. Phase 0 is complete and the development server has been stopped.
 
 ## Pending
 
-1. Review and merge the Phase 0 draft pull request when ready.
+1. Review and merge the Phase 0 draft pull request when ready, or explicitly request a verified direct sync to `main`.
 2. Execute Phase 1 as a separately approved task: production landing page and responsive application UI shells with mock data.
 3. Install Docker Desktop or a compatible runtime before local Supabase services are required in Phase 2.
 4. Configure Google and remote Supabase credentials only in their approved phases.
@@ -48,7 +45,7 @@ Nothing. Phase 0 is complete and the development server has been stopped.
 ## Files Status
 
 - Created: `AGENTS.md`, `agents-guidelines/`, `IMPLEMENTATION_PLAN.md`, `HANDOFF.md`, `.editorconfig`, `.env.example`, `.gitignore`, `.nvmrc`, `.prettierignore`, `.github/workflows/ci.yml`, `README.md`, `package.json`, `package-lock.json`, `tsconfig.json`, `eslint.config.mjs`, `prettier.config.mjs`, `postcss.config.mjs`, `next.config.ts`, `next-env.d.ts`, `src/app/globals.css`, `src/app/layout.tsx`, `src/app/(marketing)/layout.tsx`, `src/app/(marketing)/page.tsx`, `src/app/(application)/app/layout.tsx`, `src/app/(application)/app/page.tsx`, `src/app/health/route.ts`, `src/lib/config/environment.ts`, `supabase/config.toml`, `supabase/.gitignore`
-- Modified: `IMPLEMENTATION_PLAN.md` (formatted and marked Phase 0 complete with Phase 1 as the next slice), `HANDOFF.md` (Phase 0 and GitHub publication checkpoint)
+- Modified: `AGENTS.md` and `agents-guidelines/core/git-rules.md` (project-specific direct-`main` exception), `IMPLEMENTATION_PLAN.md` (formatted and marked Phase 0 complete with Phase 1 as the next slice), `HANDOFF.md` (Git policy and current checkpoint)
 - Currently Being Edited: none
 - Planned to Edit: Phase 1 UI route/components and design tokens after explicit approval
-- Untouched: `AGENTS.md`, all files under `agents-guidelines/`
+- Untouched: application source, dependency manifests, CI workflow, Supabase configuration, and the existing GitHub pull request
