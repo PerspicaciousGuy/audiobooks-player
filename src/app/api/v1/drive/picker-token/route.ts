@@ -1,20 +1,15 @@
 import { NextResponse } from "next/server";
 
-import { getAuthenticatedIdentity } from "@/features/auth/session";
 import { getValidDriveCredentials } from "@/features/drive/access";
+import { authorizeRateLimitedRequest } from "@/lib/security/apiAccess";
 
 export async function GET(): Promise<NextResponse> {
-  const identity = await getAuthenticatedIdentity();
+  const access = await authorizeRateLimitedRequest("picker_token");
 
-  if (!identity) {
-    return NextResponse.json(
-      { error: "Authentication required." },
-      { status: 401 },
-    );
-  }
+  if (access.response) return access.response;
 
   try {
-    const credentials = await getValidDriveCredentials(identity.id);
+    const credentials = await getValidDriveCredentials(access.identity.id);
 
     return NextResponse.json(
       {

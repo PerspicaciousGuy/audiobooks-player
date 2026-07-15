@@ -1,15 +1,15 @@
 # Quiet Library
 
 Quiet Library is a responsive web audiobook player and installable PWA for
-people who keep their own audiobook files in Google Drive. The application will
+people who keep their own audiobook files in Google Drive. The application can
 stream user-selected files without copying the source audio to application
 storage, while synchronizing metadata, progress, bookmarks, and preferences.
 
 ## Current status
 
-Phases 0, 1, and 6 are implemented, and the Phase 2-5 application code is
-complete pending live-provider verification. The repository includes the responsive
-visual shell, RLS-backed Supabase sessions, separate secure Drive authorization,
+Phases 0, 1, 6, and the local Phase 7 hardening work are implemented. Phase 2-5
+application code is complete pending live-provider verification. The repository
+includes the responsive visual shell, RLS-backed Supabase sessions, separate secure Drive authorization,
 explicit-action Google Picker loading, server-side Drive validation, bounded
 ID3 metadata/chapter parsing, editable file grouping, duplicate handling, and a
 transactional import into the real library. The shared player uses one audio
@@ -21,7 +21,9 @@ installable PWA adds an update-aware service worker, a branded offline shell,
 explicit OPFS/Cache Storage downloads indexed with Dexie, storage accounting,
 partial/evicted-file reconciliation, and offline multi-file playback. Final
 airplane-mode and desktop/mobile visual approval remain pending in a supported
-browser.
+browser. Release hardening adds account deletion, origin enforcement, private
+database-backed quotas, CSP/HSTS, redacted structured events, accessibility
+checks, complete versioned library APIs, and deployment/incident/OAuth guides.
 
 ## Architecture
 
@@ -110,6 +112,7 @@ must never be committed.
 | `/health`                       | Unauthenticated, non-cached process health response           |
 
 Authenticated application APIs currently include
+`GET /api/v1/library`, `GET/PATCH /api/v1/audiobooks/[audiobookId]`,
 `GET /api/v1/drive/picker-token`, `POST /api/v1/imports/preview`, and
 `POST /api/v1/imports`, plus the owned-file-only
 `GET /api/v1/audiobooks/[audiobookId]/stream?fileId=...` endpoint. Import
@@ -129,12 +132,14 @@ Playback persistence uses
 `POST /api/v1/audiobooks/[audiobookId]/bookmarks`, and
 `DELETE /api/v1/bookmarks/[bookmarkId]`. Progress responses return the accepted
 server version; stale timestamps or expected versions cannot overwrite newer
-listening positions.
+listening positions. `DELETE /api/v1/account` revokes Drive credentials before
+deleting the Supabase Auth user and cascade-owned application data; it never
+deletes source files from Google Drive.
 
 ## CI plan
 
-The pull-request workflow installs from the lockfile, checks formatting, lints,
-typechecks, runs unit tests, builds, and audits production dependencies. pgTAP
+The main-branch and pull-request workflow installs from the lockfile, checks
+formatting, lints, typechecks, runs unit tests, builds, and audits production dependencies. pgTAP
 database/RLS tests are versioned under `supabase/tests/database` and require a
 running local or hosted Supabase database. Browser tests remain a later-phase
 addition following `IMPLEMENTATION_PLAN.md`.

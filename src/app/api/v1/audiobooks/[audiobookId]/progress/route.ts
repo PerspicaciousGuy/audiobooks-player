@@ -1,12 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
-import { getAuthenticatedIdentity } from "@/features/auth/session";
 import {
   progressCheckpointSchema,
   savedProgressSchema,
 } from "@/features/progress/contracts";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { authorizeMutation } from "@/lib/security/apiAccess";
 
 const audiobookIdSchema = z.string().uuid();
 
@@ -18,15 +17,9 @@ export async function PUT(
   request: NextRequest,
   context: ProgressRouteContext,
 ): Promise<NextResponse> {
-  const identity = await getAuthenticatedIdentity();
-  const supabase = await createServerSupabaseClient();
+  const access = await authorizeMutation(request, "progress");
 
-  if (!identity || !supabase) {
-    return NextResponse.json(
-      { error: "Authentication required." },
-      { status: 401 },
-    );
-  }
+  if (access.response) return access.response;
 
   const { audiobookId: rawAudiobookId } = await context.params;
   let requestBody: unknown;
@@ -57,7 +50,7 @@ export async function PUT(
     );
   }
 
-  const { data, error } = await supabase.rpc("save_playback_progress", {
+  const { data, error } = await access.supabase.rpc("save_playback_progress", {
     p_audiobook_file_id: checkpoint.data.audiobookFileId,
     p_audiobook_id: audiobookId.data,
     p_chapter_id: checkpoint.data.chapterId,

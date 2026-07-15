@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <LegalPage
-      description="A plain-language preview of the privacy model that will govern the finished product."
+      description="How Quiet Library handles identity, selected files, listening data, and device downloads."
       title="Privacy by design"
     >
       <section>
@@ -31,11 +31,33 @@ export default function PrivacyPage() {
         </p>
       </section>
       <section>
+        <h2>Device downloads</h2>
+        <p>
+          Downloads you request are stored in this browser profile using device
+          storage. They are not uploaded to Quiet Library. You can remove one
+          book or clear all downloads from the offline page; browser storage
+          controls can also remove them.
+        </p>
+      </section>
+      <section>
+        <h2>Operational records</h2>
+        <p>
+          Security and reliability events record an operation, outcome, status,
+          and timestamp. They are designed not to include access tokens, Drive
+          file names, audiobook titles, email addresses, or listening positions.
+          Production log retention must be configured and documented by the
+          operator before launch.
+        </p>
+      </section>
+      <section>
         <h2>Your controls</h2>
         <p>
           You can disconnect Google Drive, clear device downloads, or delete
           your Quiet Library account. Account deletion removes application
           metadata and credentials; it never deletes files from Google Drive.
+          The live database records are removed through account-cascade rules.
+          Any managed backups expire according to the hosting provider’s
+          configured retention policy.
         </p>
       </section>
     </LegalPage>

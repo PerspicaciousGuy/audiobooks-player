@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { getAuthenticatedIdentity } from "@/features/auth/session";
 import { getValidDriveCredentials } from "@/features/drive/access";
 import { confirmImportSchema } from "@/features/imports/contracts";
 import {
@@ -8,16 +7,12 @@ import {
   getDuplicateDriveFileIds,
 } from "@/features/imports/repository";
 import { validateSelectedDriveFiles } from "@/features/imports/service";
+import { authorizeMutation } from "@/lib/security/apiAccess";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  const identity = await getAuthenticatedIdentity();
+  const access = await authorizeMutation(request, "import_confirm");
 
-  if (!identity) {
-    return NextResponse.json(
-      { error: "Authentication required." },
-      { status: 401 },
-    );
-  }
+  if (access.response) return access.response;
 
   const parsed = confirmImportSchema.safeParse(await request.json());
 
@@ -30,7 +25,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   try {
     const fileIds = parsed.data.groups.flatMap((group) => group.fileIds);
-    const credentials = await getValidDriveCredentials(identity.id);
+    const credentials = await getValidDriveCredentials(access.identity.id);
     const validation = await validateSelectedDriveFiles(
       fileIds,
       credentials.accessToken,
@@ -47,7 +42,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     const duplicateFileIds = await getDuplicateDriveFileIds(
-      identity.id,
+      access.identity.id,
       fileIds,
     );
 
@@ -62,7 +57,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       validation.accepted.map((file) => [file.driveFileId, file]),
     );
     const audiobookIds = await commitValidatedImport(
-      identity.id,
+      access.identity.id,
       parsed.data,
       validatedFiles,
     );

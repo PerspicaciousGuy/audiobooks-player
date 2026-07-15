@@ -1,9 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
-import { getAuthenticatedIdentity } from "@/features/auth/session";
 import { createBookmarkSchema } from "@/features/bookmarks/contracts";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { authorizeMutation } from "@/lib/security/apiAccess";
 
 const audiobookIdSchema = z.string().uuid();
 
@@ -15,15 +14,9 @@ export async function POST(
   request: NextRequest,
   context: BookmarkRouteContext,
 ): Promise<NextResponse> {
-  const identity = await getAuthenticatedIdentity();
-  const supabase = await createServerSupabaseClient();
+  const access = await authorizeMutation(request, "bookmark_create");
 
-  if (!identity || !supabase) {
-    return NextResponse.json(
-      { error: "Authentication required." },
-      { status: 401 },
-    );
-  }
+  if (access.response) return access.response;
 
   const { audiobookId: rawAudiobookId } = await context.params;
   let requestBody: unknown;
@@ -44,7 +37,7 @@ export async function POST(
     );
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await access.supabase
     .from("bookmarks")
     .insert({
       audiobook_file_id: bookmark.data.audiobookFileId,
@@ -52,7 +45,7 @@ export async function POST(
       chapter_id: bookmark.data.chapterId,
       note: bookmark.data.note,
       position_ms: bookmark.data.positionMs,
-      user_id: identity.id,
+      user_id: access.identity.id,
     })
     .select("id, position_ms, note, created_at")
     .single();

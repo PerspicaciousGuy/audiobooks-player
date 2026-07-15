@@ -32,8 +32,18 @@ export default function TermsPage() {
         <h2>Account responsibilities</h2>
         <p>
           Keep your Google account secure and disconnect access if a device or
-          session is no longer trusted. Quiet Library will provide controls for
-          revoking Drive access and deleting stored metadata.
+          session is no longer trusted. Quiet Library provides controls for
+          revoking Drive access, clearing device downloads, and deleting stored
+          application metadata.
+        </p>
+      </section>
+      <section>
+        <h2>Local downloads</h2>
+        <p>
+          Offline copies are available to anyone who can access the same
+          unlocked browser profile or device account. You are responsible for
+          the device’s security and for removing downloads before transferring
+          or disposing of the device.
         </p>
       </section>
     </LegalPage>

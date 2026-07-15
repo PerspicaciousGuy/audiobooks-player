@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 
 import { isSupabaseAuthEnabled } from "@/lib/config/environment";
@@ -10,10 +11,10 @@ export interface AuthenticatedIdentity {
   id: string;
 }
 
-export async function getAuthenticatedIdentity(): Promise<
-  AuthenticatedIdentity | undefined
-> {
-  const supabase = await createServerSupabaseClient();
+export async function getAuthenticatedIdentity(
+  client?: SupabaseClient,
+): Promise<AuthenticatedIdentity | undefined> {
+  const supabase = client ?? (await createServerSupabaseClient());
 
   if (!supabase) {
     return undefined;

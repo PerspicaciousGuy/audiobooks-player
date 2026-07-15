@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { cache } from "react";
 
 import {
@@ -61,65 +62,71 @@ export async function getOwnedAudiobooks(): Promise<Audiobook[] | undefined> {
   );
 }
 
+export async function getOwnedAudiobookWithClient(
+  supabase: SupabaseClient,
+  audiobookId: string,
+): Promise<Audiobook | null> {
+  const { data: bookData, error: bookError } = await supabase
+    .from("audiobooks")
+    .select("id, title, author, narrator, description, total_duration_ms")
+    .eq("id", audiobookId)
+    .maybeSingle();
+
+  if (bookError) throw new Error("Unable to load the audiobook.");
+  if (!bookData) return null;
+
+  const [filesResult, progressResult, chaptersResult, bookmarksResult] =
+    await Promise.all([
+      supabase
+        .from("audiobook_files")
+        .select(
+          "id, audiobook_id, file_name, mime_type, byte_size, drive_version, duration_ms, sequence",
+        )
+        .eq("audiobook_id", audiobookId),
+      supabase
+        .from("playback_progress")
+        .select(
+          "audiobook_id, audiobook_file_id, chapter_id, position_ms, playback_rate, is_completed, client_updated_at, version",
+        )
+        .eq("audiobook_id", audiobookId)
+        .maybeSingle(),
+      supabase
+        .from("chapters")
+        .select("id, audiobook_file_id, title, start_ms, end_ms")
+        .eq("audiobook_id", audiobookId)
+        .order("sequence"),
+      supabase
+        .from("bookmarks")
+        .select("id, chapter_id, position_ms, note")
+        .eq("audiobook_id", audiobookId)
+        .order("position_ms"),
+    ]);
+
+  if (
+    filesResult.error ||
+    progressResult.error ||
+    chaptersResult.error ||
+    bookmarksResult.error
+  ) {
+    throw new Error("Unable to load audiobook details.");
+  }
+
+  return mapAudiobook(
+    audiobookRowSchema.parse(bookData),
+    audiobookFileRowSchema.array().parse(filesResult.data ?? []),
+    progressResult.data
+      ? progressRowSchema.parse(progressResult.data)
+      : undefined,
+    chapterRowSchema.array().parse(chaptersResult.data ?? []),
+    bookmarkRowSchema.array().parse(bookmarksResult.data ?? []),
+  );
+}
+
 export const getOwnedAudiobook = cache(
   async (audiobookId: string): Promise<Audiobook | null | undefined> => {
     const supabase = await createServerSupabaseClient();
 
     if (!supabase) return undefined;
-
-    const { data: bookData, error: bookError } = await supabase
-      .from("audiobooks")
-      .select("id, title, author, narrator, description, total_duration_ms")
-      .eq("id", audiobookId)
-      .maybeSingle();
-
-    if (bookError) throw new Error("Unable to load the audiobook.");
-    if (!bookData) return null;
-
-    const [filesResult, progressResult, chaptersResult, bookmarksResult] =
-      await Promise.all([
-        supabase
-          .from("audiobook_files")
-          .select(
-            "id, audiobook_id, file_name, mime_type, byte_size, drive_version, duration_ms, sequence",
-          )
-          .eq("audiobook_id", audiobookId),
-        supabase
-          .from("playback_progress")
-          .select(
-            "audiobook_id, audiobook_file_id, chapter_id, position_ms, playback_rate, is_completed, client_updated_at, version",
-          )
-          .eq("audiobook_id", audiobookId)
-          .maybeSingle(),
-        supabase
-          .from("chapters")
-          .select("id, audiobook_file_id, title, start_ms, end_ms")
-          .eq("audiobook_id", audiobookId)
-          .order("sequence"),
-        supabase
-          .from("bookmarks")
-          .select("id, chapter_id, position_ms, note")
-          .eq("audiobook_id", audiobookId)
-          .order("position_ms"),
-      ]);
-
-    if (
-      filesResult.error ||
-      progressResult.error ||
-      chaptersResult.error ||
-      bookmarksResult.error
-    ) {
-      throw new Error("Unable to load audiobook details.");
-    }
-
-    return mapAudiobook(
-      audiobookRowSchema.parse(bookData),
-      audiobookFileRowSchema.array().parse(filesResult.data ?? []),
-      progressResult.data
-        ? progressRowSchema.parse(progressResult.data)
-        : undefined,
-      chapterRowSchema.array().parse(chaptersResult.data ?? []),
-      bookmarkRowSchema.array().parse(bookmarksResult.data ?? []),
-    );
+    return getOwnedAudiobookWithClient(supabase, audiobookId);
   },
 );

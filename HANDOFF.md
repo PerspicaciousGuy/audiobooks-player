@@ -4,105 +4,124 @@
 
 Quiet Library is a responsive, installable web audiobook player for people who
 keep their own audio files in Google Drive. Next.js owns the application APIs,
-Drive OAuth, imports, streaming, downloads, and synchronization. Supabase
-provides Google identity, SSR sessions, managed Postgres, migrations, and RLS.
-Source audio remains in Drive; explicit offline copies remain only on the
-user's device.
+Drive OAuth, imports, Range streaming, offline downloads, and synchronization.
+Supabase provides Google identity, SSR sessions, managed Postgres, migrations,
+and RLS. Source audio stays in Drive; explicit offline copies stay only in the
+user's browser profile.
 
 ## Current State
 
-- Phase 0 is merged into `origin/main`. Local Phase 1-6 checkpoints are on
+- The planned local implementation for Phases 0-7 is complete. Phase 0 is on
+  `origin/main`; the later local checkpoint commits are on
   `feat/phase-1-visual-shell` and have not been pushed.
-- This personal repository permits direct pushes to `main` only when the user
-  explicitly asks to push or sync directly. Force-pushing `main` is prohibited.
-- Phase 1 provides the responsive warm-editorial landing and application
-  shells for desktop and mobile, including all principal empty/loading/error
-  states.
-- Phase 2 provides Supabase SSR authentication, RLS migrations/tests, and a
-  separate user-bound Drive OAuth flow with PKCE, exact scope validation,
-  encrypted credentials, reconnect, and revoke-before-delete behavior.
-- Phase 3 provides explicit-action Google Picker selection, server-side Drive
+- Direct pushes to `main` are permitted only when the user explicitly asks to
+  push or sync directly. Force-pushing `main` is prohibited.
+- Phase 1 provides the responsive warm-editorial landing and application UI for
+  desktop and mobile, including principal empty/loading/error states.
+- Phase 2 provides Supabase SSR authentication, normalized/RLS-protected data,
+  and a separate user-bound Drive OAuth flow with PKCE, exact scopes, encrypted
+  credentials, reconnect, and revoke-before-delete.
+- Phase 3 provides explicit Google Picker selection, server-side Drive
   validation, bounded ID3/chapter parsing, editable grouping, duplicate checks,
-  transactional import, and real RLS-backed library reads.
+  transactional import, and real library reads.
 - Phase 4 provides an authenticated owned-file Range proxy and one shared audio
   engine with seeking, chapters, multi-file continuation, rate, volume, Media
   Session, and sleep timers.
 - Phase 5 provides atomic versioned progress, stale-write rejection, a bounded
-  newest-per-book retry queue, completion, exact resume, and bookmarks.
-- Phase 6 provides a typed manifest, code-native icons, install/update UX, a
-  deliberately scoped service worker, branded offline fallback, authenticated
-  full-file downloads, Dexie metadata, OPFS with Cache Storage fallback,
-  storage/quota feedback, reconciliation, removal, and offline multi-file
-  playback.
-- The service worker does not cache auth routes, application HTML, API
-  responses, Range traffic, or audio. Audio is stored only after an explicit
-  user download.
-- Next.js 15.5.20, React 19.1.0, TypeScript 5.9.3, Tailwind CSS 4.3.1, Zod
-  4.4.3, Dexie 4.4.4, Supabase CLI 2.109.1, npm 11.6.1, and Node 24 are pinned.
+  newest-per-book retry queue, exact resume, completion, and bookmarks.
+- Phase 6 provides the manifest/install/update flow, deliberately scoped service
+  worker, offline fallback, authenticated downloads, Dexie metadata, OPFS with
+  Cache Storage fallback, storage feedback, reconciliation, and offline
+  multi-file playback.
+- Phase 7 provides cursor-paginated library/detail/correction APIs, account
+  deletion with Drive revocation and Auth/database cascade, same-origin mutation
+  checks, private atomic Postgres quotas, CSP/HSTS/cross-origin headers,
+  allowlisted JSON events, redaction and accessibility tests, expanded legal
+  content, a security policy, and deployment/OAuth/incident guides.
+- CI runs quality, tests, build, and production audit for pull requests and
+  direct pushes to `main`. A separate clean Supabase job applies migrations and
+  runs all pgTAP/RLS tests.
 
 ## Last Action
 
-Completed the Phase 6 implementation checkpoint. Added the PWA manifest,
-icons, registration/install/update handling, offline fallback, safe cache
-boundaries, authenticated full-source download streaming, device storage
-backends and metadata, explicit download/cancel/remove/clear controls,
-capacity/persistence feedback, partial and evicted-file cleanup, source-version
-reconciliation, and object-URL-based offline playback through the shared audio
-engine.
+Completed the local Phase 7 hardening checkpoint and final design-to-code audit.
+Closed the remaining documented internal API gap with owned cursor pagination,
+book details, and bounded metadata corrections. Added a private per-user quota
+table and security-definer function with fixed server limits; all protected APIs
+now fail closed if quota enforcement is unavailable. Mutations require the exact
+configured origin.
 
-`npm run verify` passes with 25 Vitest/Testing Library tests and a 25-page
-production build. `npm audit --omit=dev` reports zero vulnerabilities, and
-`git diff --check` passes. Production HTTP smoke checks returned `200` for the
-manifest, service worker, both offline routes, and both icons; the unauthenticated
-download endpoint returned `401`; service-worker scope and no-cache headers are
-correct. Development and production servers are stopped.
+Added the confirmed account-deletion flow: the user must type `DELETE`, Google
+Drive is revoked first, the local session is closed, the Supabase Auth user and
+cascade-owned metadata are deleted, browser storage/cache clearing is requested,
+and original Drive files are never deleted. Operational events expose only
+allowlisted non-content fields.
 
-## In Progress
+## Verification
 
-Phase 7 hardening and release readiness is next. Phase 6's automated and HTTP
-checks pass, but installation and airplane-mode playback still need a supported
-browser plus real imported Drive audio. Phase 1 visual approval and the Phase
-2-5 live-provider exit gates also remain open because the environment has no
-browser instance, Docker, hosted Supabase configuration, or Google credentials.
+- `npm run verify`: passed formatting, ESLint, strict TypeScript, 35 tests in 14
+  files, and the 27-route production build.
+- `npm run test:coverage`: passed; current measured coverage is 60.64% statements,
+  51.08% branches, 54.46% functions, and 62.91% lines.
+- `npm audit --omit=dev`: zero vulnerabilities.
+- Production HTTP smoke: public/legal/PWA resources return `200`; protected new
+  APIs return `401` anonymously; CSP, one-year HSTS, COOP, CORP, content-type,
+  referrer, and permissions headers are present.
+- Repository audit: `git diff --check` passes, no TS/TSX file exceeds 200 lines,
+  and no API-key, private-key, or JWT-shaped secret was found.
+- Development and production servers are stopped.
 
-## Next Actions
+## External Release Gates
 
-1. Implement Phase 7 account deletion, security headers and same-origin
-   protections, database-backed rate limiting, safe structured telemetry, and
-   accurate privacy/retention documentation.
-2. Add release/deployment, Google OAuth verification, and incident-operation
-   documentation; audit accessibility, responsiveness, SEO, and performance.
-3. With Supabase available, apply migrations, generate database types, run all
-   pgTAP/RLS tests, and test two-session progress conflict behavior.
-4. With Google clients configured, verify identity, Drive consent/revocation,
-   Picker/import, real Range streaming, and full offline downloads end to end.
-5. In a supported browser, approve desktop/mobile visuals and prove PWA install,
-   update, eviction, and airplane-mode playback behavior.
+Local implementation is complete, but release is not approved until the
+following checks run against real infrastructure:
 
-## Known Issues and External Gates
+1. Select a Node streaming host, canonical domain, Supabase plan/region, log
+   retention, and backup retention.
+2. Apply migrations to staging, generate database types, run all pgTAP/RLS
+   tests, and test rollback/recovery. Docker is unavailable locally, so only the
+   configured CI/staging job can currently execute these checks.
+3. Configure Supabase Google identity plus Drive OAuth/Picker clients and verify
+   sign-in, restoration, sign-out, consent, import, reconnect, revocation, and
+   account deletion with disposable data.
+4. Validate large-file Range streaming, full downloads, host concurrency,
+   timeout, bandwidth, and egress behavior.
+5. Use two authenticated sessions to prove stale-write rejection, progress
+   restoration, and bookmark isolation.
+6. In representative desktop/mobile browsers, approve the visuals and prove PWA
+   install, update, partial cleanup, quota failure, eviction, source changes,
+   and airplane-mode multi-file playback.
 
-- Docker is unavailable, and no hosted Supabase project or Google OAuth clients
-  are configured. No credentials were invented or committed.
-- The in-app browser has no available browser instance, so screenshot review and
-  real service-worker/offline interaction tests cannot run here.
-- Unknown dynamic audiobook routes currently render noindex not-found UI with a
-  streamed HTTP `200`; revisit hard-404 behavior during Phase 7.
+Follow `docs/DEPLOYMENT.md` for the release order,
+`docs/GOOGLE_OAUTH_VERIFICATION.md` for Google setup/evidence, and
+`docs/OPERATIONS.md` for monitoring and incidents.
+
+## Known Constraints
+
+- No Docker, hosted Supabase project, Google OAuth clients, production domain,
+  or deploy target are configured. No credentials were invented or committed.
+- The in-app browser has no available instance, so screenshot review, real
+  service-worker interaction, and device accessibility/performance audits remain
+  external.
+- Unknown dynamic audiobook pages currently render noindex not-found UI with a
+  streamed HTTP `200`; retain this known Next.js behavior unless a host-level
+  hard `404` requirement is added.
 - Browser codec support varies, especially for OGG and some audiobook formats;
-  final capability checks require representative devices and files.
-- Hosting must be validated for long-lived streaming, bandwidth, concurrency,
-  timeout, and egress behavior.
+  final capability behavior requires representative devices and files.
 - `IMPLEMENTATION_PLAN.md` exceeds the generic 500-line guideline but remains a
   single cohesive planning artifact.
 
 ## Files Status
 
-- Created: PWA manifest/icons/service worker, install manager, public offline
-  page, device-library controls, offline database/storage/download modules, and
-  authenticated full-file download route.
-- Modified: layout/config, audiobook source mapping, shared player offline
-  resolution, offline page, dependencies, README, implementation plan, and this
-  handoff.
+- Created: account and versioned library APIs; account-deletion control; library
+  contracts/tests; request-origin, quota, observability, and redaction modules;
+  rate-limit migration/rollback/pgTAP; security policy; deployment, OAuth, and
+  operations guides.
+- Modified: all protected API access, authentication client reuse, library
+  repository, legal/settings UI, security headers, CI, dependencies, README,
+  implementation plan, and this handoff.
 - Currently being edited: none.
-- Planned next: Phase 7 security, privacy/account, operations, deployment, and
-  audit files.
-- Untouched: real credentials, remote branches, and user Drive files.
+- Next work: external staging/provider/browser validation only, followed by fixes
+  if those evidence-based checks find issues.
+- Untouched: real credentials, remote branches, production services, and user
+  Google Drive files.

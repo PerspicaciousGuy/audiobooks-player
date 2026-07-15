@@ -137,17 +137,18 @@ Architectural rules:
 | Endpoint                                          | Responsibility                                                     |
 | ------------------------------------------------- | ------------------------------------------------------------------ |
 | `GET /api/v1/library`                             | Cursor-paginated authenticated library data                        |
+| `POST /api/v1/imports/preview`                    | Validate selected IDs and return editable groups                   |
 | `POST /api/v1/imports`                            | Validate selected Drive file IDs and create/update library records |
-| `GET /api/v1/imports/[importId]`                  | Import status if metadata processing becomes asynchronous          |
 | `GET /api/v1/audiobooks/[audiobookId]`            | Authenticated audiobook details                                    |
 | `PATCH /api/v1/audiobooks/[audiobookId]`          | User metadata corrections                                          |
 | `GET /api/v1/audiobooks/[audiobookId]/stream`     | Range-aware authenticated audio stream                             |
+| `GET /api/v1/audiobooks/[audiobookId]/download`   | Explicit authenticated full-file device download                   |
 | `PUT /api/v1/audiobooks/[audiobookId]/progress`   | Idempotent playback checkpoint update                              |
 | `POST /api/v1/audiobooks/[audiobookId]/bookmarks` | Create a bookmark                                                  |
 | `DELETE /api/v1/bookmarks/[bookmarkId]`           | Delete an owned bookmark                                           |
-| `DELETE /api/v1/drive-connection`                 | Revoke access and remove stored Drive credentials                  |
+| `DELETE /api/v1/account`                          | Revoke Drive and delete owned application data                     |
 
-Supabase Auth callback/session routes remain framework-controlled and are not treated as public application API resources.
+Supabase Auth callback/session routes remain framework-controlled and are not treated as public application API resources. Drive disconnection is a protected server action because it terminates in a UI redirect.
 
 ## 8. Core User Flows
 
@@ -472,7 +473,7 @@ HTTP smoke tests pass; the install and airplane-mode portions of the exit gate
 remain pending until a supported browser and real imported Drive audio are
 available.
 
-### Phase 7 — Hardening and release readiness
+### Phase 7 — Hardening and release readiness (local implementation completed 2026-07-15)
 
 - Run accessibility, responsive, performance, and security reviews.
 - Add privacy and terms content, account deletion, token revocation, and retention behavior.
@@ -481,6 +482,16 @@ available.
 - Prepare Google OAuth branding/verification materials if required.
 
 Exit gate: staging smoke tests pass and production prerequisites are documented.
+
+Implementation checkpoint: account deletion with revoke-before-cascade,
+same-origin mutation enforcement, private atomic Postgres quotas, CSP/HSTS and
+cross-origin headers, allowlisted structured events with redaction tests,
+expanded legal content, automated component accessibility checks, versioned
+library/detail/correction APIs, CI tests on pull requests and `main`, security
+policy, deployment checklist, incident operations, and Google OAuth verification
+materials are implemented. Local verification can close after the production
+build and HTTP security smoke pass; the staging, provider, device, and hosting
+portions of the exit gate remain external release blockers.
 
 ## 18. Test Plan
 
@@ -533,22 +544,25 @@ Automated tests do not use real production Google accounts or production data.
 ## 20. Decisions Deferred Until Their Phase
 
 - Final Next.js hosting provider and production Supabase plan/region.
-- Exact Supabase and Google client packages after current-version review.
 - Metadata parser after testing M4B/MP3 chapter and memory behavior.
-- OPFS fallback strategy after browser capability testing.
 - Final app name, domain, logo, icons, and font licenses.
 - Whether broader Drive folder scanning is worth restricted-scope verification.
 - Whether streaming egress economics require a different architecture after real measurements.
 
 ## 21. Next Implementation Slice
 
-Phase 0 is complete. The next approved execution should be Phase 1 only:
+The planned local implementation is complete. The next slice is release
+validation against real infrastructure:
 
-1. Refine the approved design tokens and shared UI primitives.
-2. Implement the approved responsive landing page.
-3. Build the desktop and mobile application shells with realistic mock data.
-4. Add the planned home, library, book, player, offline, settings, and state surfaces.
-5. Verify accessibility, responsive behavior, formatting, lint, typecheck, and build.
-6. Update this plan and `HANDOFF.md` with the completed checkpoint.
-
-Google credentials, remote Supabase provisioning/linking, database migrations, authentication, and Drive integration remain outside Phase 1 unless separately approved.
+1. Select the Node hosting provider, production domain, Supabase plan/region,
+   log retention, and backup retention.
+2. Apply migrations in staging, generate database types, and run every pgTAP/RLS
+   test from a clean database.
+3. Configure Google identity, Drive OAuth, and Picker clients; verify all live
+   provider flows using disposable test data.
+4. Run the deployment checklist with representative long files and two
+   authenticated sessions.
+5. Approve desktop/mobile visuals and PWA install, update, eviction, and
+   airplane-mode playback on representative browsers and devices.
+6. Promote the exact validated commit and migration set only after every release
+   gate is recorded as passing.

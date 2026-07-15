@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import AccountDeletionControl from "@/components/settings/AccountDeletionControl";
 import SettingRow from "@/components/settings/SettingRow";
 import Icon from "@/components/ui/Icon";
 import SectionHeading from "@/components/ui/SectionHeading";
@@ -174,12 +175,7 @@ export default async function SettingsPage({
             stored credentials. It never deletes your Google Drive files.
           </p>
         </div>
-        <button
-          className="border-danger text-danger hover:bg-danger hover:text-paper-elevated focus-visible:ring-danger rounded-control min-h-11 border px-4 text-sm font-semibold focus-visible:ring-2 focus-visible:outline-none"
-          type="button"
-        >
-          Delete account
-        </button>
+        <AccountDeletionControl />
       </section>
     </div>
   );

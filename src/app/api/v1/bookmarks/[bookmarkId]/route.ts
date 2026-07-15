@@ -1,26 +1,19 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getAuthenticatedIdentity } from "@/features/auth/session";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { authorizeMutation } from "@/lib/security/apiAccess";
 
 interface BookmarkRouteContext {
   params: Promise<{ bookmarkId: string }>;
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   context: BookmarkRouteContext,
 ): Promise<NextResponse> {
-  const identity = await getAuthenticatedIdentity();
-  const supabase = await createServerSupabaseClient();
+  const access = await authorizeMutation(request, "bookmark_delete");
 
-  if (!identity || !supabase) {
-    return NextResponse.json(
-      { error: "Authentication required." },
-      { status: 401 },
-    );
-  }
+  if (access.response) return access.response;
 
   const { bookmarkId: rawBookmarkId } = await context.params;
   const bookmarkId = z.string().uuid().safeParse(rawBookmarkId);
@@ -29,11 +22,11 @@ export async function DELETE(
     return NextResponse.json({ error: "Invalid bookmark." }, { status: 400 });
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await access.supabase
     .from("bookmarks")
     .delete()
     .eq("id", bookmarkId.data)
-    .eq("user_id", identity.id)
+    .eq("user_id", access.identity.id)
     .select("id")
     .maybeSingle();
 

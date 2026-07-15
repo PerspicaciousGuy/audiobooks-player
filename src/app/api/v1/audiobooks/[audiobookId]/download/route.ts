@@ -1,9 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
-import { getAuthenticatedIdentity } from "@/features/auth/session";
 import { openDriveDownloadStream } from "@/features/streaming/driveStream";
 import { getOwnedStreamFile } from "@/features/streaming/repository";
+import { authorizeRateLimitedRequest } from "@/lib/security/apiAccess";
 
 const identifiersSchema = z.object({
   audiobookId: z.string().uuid(),
@@ -18,14 +18,9 @@ export async function GET(
   request: NextRequest,
   context: DownloadRouteContext,
 ): Promise<NextResponse> {
-  const identity = await getAuthenticatedIdentity();
+  const access = await authorizeRateLimitedRequest("download");
 
-  if (!identity) {
-    return NextResponse.json(
-      { error: "Authentication required." },
-      { status: 401 },
-    );
-  }
+  if (access.response) return access.response;
 
   const { audiobookId } = await context.params;
   const identifiers = identifiersSchema.safeParse({
@@ -54,7 +49,7 @@ export async function GET(
     }
 
     const upstream = await openDriveDownloadStream(
-      identity.id,
+      access.identity.id,
       file,
       request.signal,
     );

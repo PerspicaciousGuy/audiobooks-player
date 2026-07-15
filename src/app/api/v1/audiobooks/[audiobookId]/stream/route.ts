@@ -1,10 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
-import { getAuthenticatedIdentity } from "@/features/auth/session";
 import { openDriveRangeStream } from "@/features/streaming/driveStream";
 import { parseBoundedRange } from "@/features/streaming/range";
 import { getOwnedStreamFile } from "@/features/streaming/repository";
+import { authorizeRateLimitedRequest } from "@/lib/security/apiAccess";
 
 const identifiersSchema = z.object({
   audiobookId: z.string().uuid(),
@@ -29,14 +29,9 @@ export async function GET(
   request: NextRequest,
   context: StreamRouteContext,
 ): Promise<NextResponse> {
-  const identity = await getAuthenticatedIdentity();
+  const access = await authorizeRateLimitedRequest("stream");
 
-  if (!identity) {
-    return NextResponse.json(
-      { error: "Authentication required." },
-      { status: 401 },
-    );
-  }
+  if (access.response) return access.response;
 
   const { audiobookId } = await context.params;
   const identifiers = identifiersSchema.safeParse({
@@ -71,7 +66,7 @@ export async function GET(
 
     if (!range) return rangeNotSatisfiable(file.byteSize);
     const upstream = await openDriveRangeStream(
-      identity.id,
+      access.identity.id,
       file,
       range,
       request.signal,

@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { getAuthenticatedIdentity } from "@/features/auth/session";
 import { getValidDriveCredentials } from "@/features/drive/access";
 import {
   selectedDriveFilesSchema,
@@ -9,16 +8,12 @@ import {
 import { groupValidatedDriveFiles } from "@/features/imports/grouping";
 import { getDuplicateDriveFileIds } from "@/features/imports/repository";
 import { validateSelectedDriveFiles } from "@/features/imports/service";
+import { authorizeMutation } from "@/lib/security/apiAccess";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  const identity = await getAuthenticatedIdentity();
+  const access = await authorizeMutation(request, "import_preview");
 
-  if (!identity) {
-    return NextResponse.json(
-      { error: "Authentication required." },
-      { status: 401 },
-    );
-  }
+  if (access.response) return access.response;
 
   const parsed = selectedDriveFilesSchema.safeParse(await request.json());
 
@@ -30,13 +25,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    const credentials = await getValidDriveCredentials(identity.id);
+    const credentials = await getValidDriveCredentials(access.identity.id);
     const validation = await validateSelectedDriveFiles(
       parsed.data.fileIds,
       credentials.accessToken,
     );
     const duplicateFileIds = await getDuplicateDriveFileIds(
-      identity.id,
+      access.identity.id,
       validation.accepted.map(({ driveFileId }) => driveFileId),
     );
     const duplicateSet = new Set(duplicateFileIds);
