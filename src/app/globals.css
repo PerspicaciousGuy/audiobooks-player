@@ -9,11 +9,30 @@
   --color-ink-muted: oklch(0.5 0.018 70);
   --color-action: oklch(0.66 0.13 65);
   --color-action-strong: oklch(0.57 0.14 61);
+  --color-action-soft: oklch(0.93 0.045 72);
   --color-border: oklch(0.87 0.018 78);
   --color-focus: oklch(0.62 0.15 58);
+  --color-surface-muted: oklch(0.945 0.014 78);
+  --color-player: oklch(0.99 0.008 82);
   --color-success: oklch(0.58 0.12 145);
   --color-warning: oklch(0.68 0.14 78);
   --color-danger: oklch(0.57 0.18 28);
+
+  --color-cover-amber: oklch(0.83 0.1 78);
+  --color-cover-amber-deep: oklch(0.67 0.12 68);
+  --color-cover-amber-ink: oklch(0.25 0.035 65);
+  --color-cover-forest: oklch(0.48 0.075 145);
+  --color-cover-forest-deep: oklch(0.29 0.045 145);
+  --color-cover-ink: oklch(0.37 0.035 260);
+  --color-cover-ink-deep: oklch(0.2 0.025 260);
+  --color-cover-plum: oklch(0.5 0.075 325);
+  --color-cover-plum-deep: oklch(0.3 0.05 325);
+  --color-cover-rose: oklch(0.83 0.08 25);
+  --color-cover-rose-deep: oklch(0.7 0.1 25);
+  --color-cover-rose-ink: oklch(0.28 0.045 25);
+  --color-cover-sky: oklch(0.82 0.055 235);
+  --color-cover-sky-deep: oklch(0.66 0.07 235);
+  --color-cover-sky-ink: oklch(0.25 0.045 240);
 
   --color-paper-dark: oklch(0.2 0.012 70);
   --color-paper-elevated-dark: oklch(0.245 0.014 70);
@@ -21,8 +40,8 @@
   --color-ink-muted-dark: oklch(0.72 0.014 78);
   --color-border-dark: oklch(0.35 0.016 70);
 
-  --font-display: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
-  --font-body: Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-editorial), "Iowan Old Style", Georgia, serif;
+  --font-body: var(--font-interface), ui-sans-serif, system-ui, sans-serif;
 
   --spacing-page-gutter: clamp(1rem, 3vw, 2.5rem);
   --spacing-content: 72rem;
@@ -33,6 +52,7 @@
 
   --shadow-card: 0 1rem 3rem oklch(0.245 0.018 70 / 0.08);
   --shadow-player: 0 -0.5rem 2rem oklch(0.245 0.018 70 / 0.1);
+  --shadow-float: 0 1.5rem 4rem oklch(0.245 0.018 70 / 0.14);
 
   --breakpoint-wide: 90rem;
   --duration-fast: 150ms;
@@ -56,6 +76,17 @@
     font-family: var(--font-body);
     background: var(--color-paper);
     color: var(--color-ink);
+  }
+
+  [data-theme="dark"] {
+    --color-paper: var(--color-paper-dark);
+    --color-paper-elevated: var(--color-paper-elevated-dark);
+    --color-ink: var(--color-ink-dark);
+    --color-ink-muted: var(--color-ink-muted-dark);
+    --color-border: var(--color-border-dark);
+    --color-surface-muted: oklch(0.27 0.014 70);
+    --color-player: oklch(0.23 0.014 70);
+    --color-action-soft: oklch(0.31 0.045 65);
   }
 
   :focus-visible {

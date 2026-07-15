@@ -8,44 +8,48 @@ The approved technical direction is a hybrid backend: Next.js owns application A
 
 ## Current State
 
-- Phase 0 is complete on branch `feat/phase-0-foundation` and published to `https://github.com/PerspicaciousGuy/audiobooks-player.git` through a draft pull request targeting `main`.
+- Phase 0 is merged into `origin/main`. Active work is on local branch `feat/phase-1-visual-shell`; nothing from Phase 1 has been pushed.
 - This personal repository permits a normal direct push to `main` when the user explicitly asks to push or sync directly; pull requests remain the default for ambiguous requests, and force-pushing `main` remains prohibited.
 - Next.js 15.5.20, React 19.1.0, TypeScript 5.9.3, Tailwind CSS 4.3.1, Zod 4.4.3, and the Supabase CLI 2.109.1 are pinned with npm 11.6.1 and Node 24.
-- Public `/`, application `/app`, and unauthenticated `/health` route foundations are implemented.
+- The Phase 1 responsive visual shell is implemented: landing, privacy, terms, auth error, application home, onboarding, library and collection states, audiobook detail, expanded player, offline management, settings, loading, error, and not-found surfaces.
+- Desktop uses persistent left navigation and a bottom player; mobile uses a compact header, mini-player, and bottom navigation. All content uses mock data with no backend dependency.
 - Strict TypeScript, ESLint, Prettier with Tailwind ordering, environment validation, security headers, design tokens, and a pull-request CI workflow are configured.
 - The local Supabase CLI layout exists and is intentionally not linked to a remote project.
-- `npm ci`, formatting, lint, typecheck, production build, dependency audit, and live route smoke checks pass.
-- No authentication, database migrations, Google integration, production UI, player, tests, or PWA service worker has been implemented.
+- Formatting, lint, strict typecheck, production build, production route smoke checks, expected unknown-book `404`, and production dependency audit pass. The build generates 21 pages and reports zero production vulnerabilities.
+- No authentication, database migrations, Google integration, functional audio playback, persistence, tests, or PWA service worker has been implemented.
+- Phase 1 visual approval remains pending because the in-app browser was unavailable for desktop/mobile screenshots in this session.
 
 ## Last Action
 
-Added a project-specific Git policy exception to `AGENTS.md` and `agents-guidelines/core/git-rules.md`: when the user explicitly requests a direct push or sync to `main`, agents may do so after fetching and verifying the remote state, diff, secrets, and relevant checks. The exception permits only a normal non-force push; a pull request remains the default when the request is ambiguous. The existing draft pull request and remote branches were not changed.
+Reconciled local Git with merged `origin/main`, created `feat/phase-1-visual-shell`, and carried the project-specific Git policy checkpoint forward. Implemented the complete Phase 1 visual surface using the existing dependency set: expanded Tailwind design tokens and `next/font` typography, reusable application/marketing/library/player/state primitives, realistic mock audiobook data, every planned public and application route, responsive navigation/player chrome, accessibility semantics, and SEO routes. Updated `README.md` to reflect the new route and feature status.
+
+Ran `npm run verify`, live development and production route smoke checks, an expected unknown-audiobook `404` check, file-size checks, `git diff --check`, and `npm audit --omit=dev --audit-level=high`. The in-app browser could not be selected because no browser instance was available, so visual screenshot verification was not claimed.
 
 ## In Progress
 
-Nothing. Phase 0 is complete and the development server has been stopped.
+Phase 1 is implemented and its automated/runtime gates pass. Desktop/mobile visual review is still required before the Phase 1 exit gate can be marked fully approved. Development and production servers are stopped.
 
 ## Pending
 
-1. Review and merge the Phase 0 draft pull request when ready, or explicitly request a verified direct sync to `main`.
-2. Execute Phase 1 as a separately approved task: production landing page and responsive application UI shells with mock data.
-3. Install Docker Desktop or a compatible runtime before local Supabase services are required in Phase 2.
-4. Configure Google and remote Supabase credentials only in their approved phases.
-5. Add test tooling and tests with the features they verify, following `IMPLEMENTATION_PLAN.md`.
+1. Capture and review desktop/mobile screenshots when the in-app browser becomes available; correct any visual issues before closing the Phase 1 exit gate.
+2. Begin Phase 2 database/authentication work after loading the Supabase, auth, security, API-data, and testing rules.
+3. Install Docker Desktop or a compatible runtime before local Supabase migration/RLS verification; Docker remains unavailable on this machine.
+4. Configure Google identity and remote Supabase credentials without committing secrets when external project values are available.
+5. Add the planned test toolchain and tests with the features they verify, following `IMPLEMENTATION_PLAN.md`.
 
 ## Known Issues
 
 - Docker is not installed, so `supabase start` and local database/auth container verification cannot run yet. `supabase init` and CLI 2.109.1 were verified.
-- The `/` and `/app` screens are intentional Phase 0 foundations, not the approved production UI.
-- The generated landing-page concept used a static 2024 footer year; Phase 1 must use the current year dynamically.
+- The in-app browser reported no available browser instances, so Phase 1 desktop/mobile visual fidelity and interaction screenshots are not yet verified. Code-level responsive and accessibility rules were applied and automated gates pass.
+- The settings, filters, onboarding authorization, and player controls are intentionally visual/mock interactions in Phase 1; their functional behavior belongs to later phases.
 - OGG and some audiobook codecs are not uniformly supported across browsers; runtime capability detection remains required.
 - Final hosting must be validated for long-lived Range streaming, bandwidth, concurrency, and egress cost.
 - `IMPLEMENTATION_PLAN.md` is over the generic 500-line guideline after Markdown formatting; it remains one cohesive planning responsibility and was not split during Phase 0.
 
 ## Files Status
 
-- Created: `AGENTS.md`, `agents-guidelines/`, `IMPLEMENTATION_PLAN.md`, `HANDOFF.md`, `.editorconfig`, `.env.example`, `.gitignore`, `.nvmrc`, `.prettierignore`, `.github/workflows/ci.yml`, `README.md`, `package.json`, `package-lock.json`, `tsconfig.json`, `eslint.config.mjs`, `prettier.config.mjs`, `postcss.config.mjs`, `next.config.ts`, `next-env.d.ts`, `src/app/globals.css`, `src/app/layout.tsx`, `src/app/(marketing)/layout.tsx`, `src/app/(marketing)/page.tsx`, `src/app/(application)/app/layout.tsx`, `src/app/(application)/app/page.tsx`, `src/app/health/route.ts`, `src/lib/config/environment.ts`, `supabase/config.toml`, `supabase/.gitignore`
-- Modified: `AGENTS.md` and `agents-guidelines/core/git-rules.md` (project-specific direct-`main` exception), `IMPLEMENTATION_PLAN.md` (formatted and marked Phase 0 complete with Phase 1 as the next slice), `HANDOFF.md` (Git policy and current checkpoint)
+- Created: Phase 0 foundation files plus `src/types/audiobook.ts`, `src/lib/mock/library.ts`, shared components under `src/components/{application,brand,library,marketing,player,settings,states,ui}/`, public routes under `src/app/(marketing)/{privacy,terms,auth/error}/`, application routes under `src/app/(application)/app/{library,onboarding,offline,settings,audiobooks/[audiobookId]}/`, application `loading.tsx` and `error.tsx`, root `not-found.tsx`, `robots.ts`, and `sitemap.ts`
+- Modified: `src/app/globals.css` (semantic light/dark design tokens), `src/app/layout.tsx` (editorial/interface fonts), marketing and application layouts/pages (production visual shells), `README.md` (Phase 1 status and routes), `HANDOFF.md` (this checkpoint), and local ignored agent rules (direct-`main` policy)
 - Currently Being Edited: none
-- Planned to Edit: Phase 1 UI route/components and design tokens after explicit approval
-- Untouched: application source, dependency manifests, CI workflow, Supabase configuration, and the existing GitHub pull request
+- Planned to Edit: Phase 1 UI only if visual review finds issues; otherwise Phase 2 Supabase clients, migrations, auth routes/actions, middleware/session handling, environment schema, tests, README, and handoff
+- Untouched: package dependency versions, Supabase schema/migrations, Google credentials/integration, streaming APIs, service worker, and remote Git branches

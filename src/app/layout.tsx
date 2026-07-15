@@ -1,8 +1,22 @@
 import type { Metadata } from "next";
+import { Cormorant_Garamond, Manrope } from "next/font/google";
 
 import { environment } from "@/lib/config/environment";
 
 import "./globals.css";
+
+const displayFont = Cormorant_Garamond({
+  display: "swap",
+  subsets: ["latin"],
+  variable: "--font-editorial",
+  weight: ["500", "600", "700"],
+});
+
+const bodyFont = Manrope({
+  display: "swap",
+  subsets: ["latin"],
+  variable: "--font-interface",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(environment.appUrl),
@@ -20,7 +34,7 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en">
+    <html className={`${displayFont.variable} ${bodyFont.variable}`} lang="en">
       <body>{children}</body>
     </html>
   );

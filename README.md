@@ -7,11 +7,13 @@ storage, while synchronizing metadata, progress, bookmarks, and preferences.
 
 ## Current status
 
-Phase 0 establishes the application foundation. The repository currently
-contains public and application route shells, design tokens, environment
-validation, a health endpoint, a local Supabase CLI configuration, and CI
-quality checks. Authentication, Google Drive access, the production UI, audio
-playback, and PWA behavior are not implemented yet.
+Phase 0 is complete and the Phase 1 visual shell is implemented. The repository
+contains the responsive landing page, desktop and mobile application shells,
+mock home/library/book/player/offline/settings experiences, required UI states,
+design tokens, environment validation, a health endpoint, local Supabase CLI
+configuration, and CI quality checks. Authentication, Google Drive access,
+functional audio playback, persistence, and PWA behavior are not implemented
+yet. Final desktop/mobile visual approval for Phase 1 remains pending.
 
 ## Architecture
 
@@ -34,8 +36,8 @@ plan and [HANDOFF.md](./HANDOFF.md) for the current checkpoint.
 - Docker Desktop or another Docker-compatible runtime when running the local
   Supabase stack
 
-The web application can run without Docker during Phase 0. Docker is required
-before `npm run supabase:start` can launch the local Supabase services.
+The web application can run without Docker during Phases 0 and 1. Docker is
+required before `npm run supabase:start` can launch the local Supabase services.
 
 ## Local setup
 
@@ -70,16 +72,23 @@ Copy `.env.example` to `.env.local`. Only `NEXT_PUBLIC_` variables may enter the
 browser bundle. Supabase secret keys, database URLs, Google client secrets, and
 the Drive token-encryption key must remain server-only.
 
-No real credentials are required for Phase 0. They will be configured in their
-approved implementation phases and must never be committed.
+No real credentials are required for Phases 0 and 1. They will be configured in
+their approved implementation phases and must never be committed.
 
 ## Routes
 
-| Route     | Current purpose                                                     |
-| --------- | ------------------------------------------------------------------- |
-| `/`       | Public landing-page foundation                                      |
-| `/app`    | Authenticated application-shell foundation; auth arrives in Phase 2 |
-| `/health` | Unauthenticated, non-cached process health response                 |
+| Route                           | Current purpose                                               |
+| ------------------------------- | ------------------------------------------------------------- |
+| `/`                             | Responsive public landing page                                |
+| `/privacy`, `/terms`            | Privacy model and terms previews                              |
+| `/auth/error`                   | Safe authentication failure state                             |
+| `/app`                          | Continue listening and recent-book home                       |
+| `/app/onboarding`               | Drive connection and first-import preview                     |
+| `/app/library`                  | Search/filter library shell and previewable collection states |
+| `/app/audiobooks/[audiobookId]` | Book detail, chapters, bookmarks, and expanded player shell   |
+| `/app/offline`                  | Device download and storage-management shell                  |
+| `/app/settings`                 | Playback, appearance, Drive, and account settings             |
+| `/health`                       | Unauthenticated, non-cached process health response           |
 
 ## CI plan
 
