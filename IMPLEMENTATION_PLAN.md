@@ -495,11 +495,12 @@ Implementation checkpoint: account deletion with revoke-before-cascade,
 same-origin mutation enforcement, private atomic Postgres quotas, CSP/HSTS and
 cross-origin headers, allowlisted structured events with redaction tests,
 expanded legal content, automated component accessibility checks, versioned
-library/detail/correction APIs, CI tests on pull requests and `main`, security
-policy, deployment checklist, incident operations, and Google OAuth verification
-materials are implemented. Local verification can close after the production
-build and HTTP security smoke pass; the staging, provider, device, and hosting
-portions of the exit gate remain external release blockers.
+library/detail/correction APIs, consistent RFC 9457 error responses, CI tests on
+pull requests and `main`, a repeatable production HTTP/PWA/security smoke check,
+security policy, deployment checklist, incident operations, and Google OAuth
+verification materials are implemented. Local verification can close after the
+production build and HTTP security smoke pass; the staging, provider, device,
+and hosting portions of the exit gate remain external release blockers.
 
 ## 18. Test Plan
 

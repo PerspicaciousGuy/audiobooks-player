@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getValidDriveCredentials } from "@/features/drive/access";
+import { problemResponse } from "@/lib/api/problem";
 import { authorizeRateLimitedRequest } from "@/lib/security/apiAccess";
 
 export async function GET(): Promise<NextResponse> {
@@ -24,9 +25,6 @@ export async function GET(): Promise<NextResponse> {
       },
     );
   } catch {
-    return NextResponse.json(
-      { error: "Google Drive must be reconnected." },
-      { status: 409 },
-    );
+    return problemResponse("Google Drive must be reconnected.", 409);
   }
 }

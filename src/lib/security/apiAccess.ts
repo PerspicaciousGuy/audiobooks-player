@@ -7,6 +7,7 @@ import {
   type AuthenticatedIdentity,
 } from "@/features/auth/session";
 import { environment } from "@/lib/config/environment";
+import { problemResponse } from "@/lib/api/problem";
 import { recordServerEvent } from "@/lib/observability/logger";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -27,13 +28,6 @@ interface RejectedRequest {
 
 export type ApiAccessResult = AuthorizedRequest | RejectedRequest;
 
-function errorResponse(error: string, status: number): NextResponse {
-  return NextResponse.json(
-    { error },
-    { headers: { "cache-control": "no-store" }, status },
-  );
-}
-
 async function authorizeIdentity(): Promise<ApiAccessResult> {
   const supabase = await createServerSupabaseClient();
   const identity = supabase
@@ -41,7 +35,7 @@ async function authorizeIdentity(): Promise<ApiAccessResult> {
     : undefined;
 
   if (!identity || !supabase) {
-    return { response: errorResponse("Authentication required.", 401) };
+    return { response: problemResponse("Authentication required.", 401) };
   }
 
   return { identity, supabase };
@@ -61,14 +55,11 @@ async function applyQuota(
         status: 429,
       });
       return {
-        response: NextResponse.json(
-          { error: "Too many requests. Try again shortly." },
+        response: problemResponse(
+          "Too many requests. Try again shortly.",
+          429,
           {
-            headers: {
-              "cache-control": "no-store",
-              "retry-after": String(quota.retryAfterSeconds),
-            },
-            status: 429,
+            headers: { "retry-after": String(quota.retryAfterSeconds) },
           },
         ),
       };
@@ -80,7 +71,7 @@ async function applyQuota(
       status: 503,
     });
     return {
-      response: errorResponse("Request protection is unavailable.", 503),
+      response: problemResponse("Request protection is unavailable.", 503),
     };
   }
 
@@ -103,7 +94,9 @@ export async function authorizeMutation(
   if (access.response) return access;
 
   if (!isSameOriginMutation(request, environment.appUrl)) {
-    return { response: errorResponse("Request origin is not allowed.", 403) };
+    return {
+      response: problemResponse("Request origin is not allowed.", 403),
+    };
   }
 
   return applyQuota(access, bucket);

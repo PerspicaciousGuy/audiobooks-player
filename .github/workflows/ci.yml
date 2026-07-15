@@ -45,6 +45,11 @@ jobs:
         env:
           NEXT_PUBLIC_APP_URL: http://localhost:3000
 
+      - name: Production HTTP smoke
+        run: npm run test:smoke
+        env:
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high
 

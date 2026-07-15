@@ -33,12 +33,12 @@ export default function DriveImportFlow({ apiKey }: DriveImportFlowProps) {
         method: "POST",
       });
       const payload = (await response.json()) as ImportPreviewResponse & {
-        error?: string;
+        detail?: string;
       };
 
       if (!response.ok) {
         throw new Error(
-          payload.error ?? "The selected files could not be reviewed.",
+          payload.detail ?? "The selected files could not be reviewed.",
         );
       }
 
@@ -76,11 +76,11 @@ export default function DriveImportFlow({ apiKey }: DriveImportFlowProps) {
       });
       const payload = (await response.json()) as {
         audiobookIds?: string[];
-        error?: string;
+        detail?: string;
       };
 
       if (!response.ok || !payload.audiobookIds) {
-        throw new Error(payload.error ?? "The import could not be completed.");
+        throw new Error(payload.detail ?? "The import could not be completed.");
       }
 
       router.push(`/app/library?imported=${payload.audiobookIds.length}`);

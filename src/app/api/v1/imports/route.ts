@@ -7,6 +7,7 @@ import {
   getDuplicateDriveFileIds,
 } from "@/features/imports/repository";
 import { validateSelectedDriveFiles } from "@/features/imports/service";
+import { problemResponse } from "@/lib/api/problem";
 import { authorizeMutation } from "@/lib/security/apiAccess";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -14,12 +15,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   if (access.response) return access.response;
 
-  const parsed = confirmImportSchema.safeParse(await request.json());
+  let body: unknown;
+
+  try {
+    body = await request.json();
+  } catch {
+    return problemResponse("Invalid JSON body.", 400);
+  }
+
+  const parsed = confirmImportSchema.safeParse(body);
 
   if (!parsed.success) {
-    return NextResponse.json(
-      { error: "The audiobook review contains invalid fields." },
-      { status: 400 },
+    return problemResponse(
+      "The audiobook review contains invalid fields.",
+      400,
     );
   }
 
@@ -32,12 +41,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
 
     if (validation.rejected.length > 0) {
-      return NextResponse.json(
-        {
-          error: "One or more files are no longer available for import.",
-          rejected: validation.rejected,
-        },
-        { status: 422 },
+      return problemResponse(
+        "One or more files are no longer available for import.",
+        422,
+        { extensions: { rejected: validation.rejected } },
       );
     }
 
@@ -47,10 +54,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
 
     if (duplicateFileIds.length > 0) {
-      return NextResponse.json(
-        { duplicateFileIds, error: "One or more files were already imported." },
-        { status: 409 },
-      );
+      return problemResponse("One or more files were already imported.", 409, {
+        extensions: { duplicateFileIds },
+      });
     }
 
     const validatedFiles = new Map(
@@ -64,9 +70,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json({ audiobookIds }, { status: 201 });
   } catch {
-    return NextResponse.json(
-      { error: "The audiobook import could not be completed." },
-      { status: 500 },
-    );
+    return problemResponse("The audiobook import could not be completed.", 500);
   }
 }

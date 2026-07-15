@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { openDriveDownloadStream } from "@/features/streaming/driveStream";
 import { getOwnedStreamFile } from "@/features/streaming/repository";
+import { problemResponse } from "@/lib/api/problem";
 import { authorizeRateLimitedRequest } from "@/lib/security/apiAccess";
 
 const identifiersSchema = z.object({
@@ -29,10 +30,7 @@ export async function GET(
   });
 
   if (!identifiers.success) {
-    return NextResponse.json(
-      { error: "Invalid audio source." },
-      { status: 400 },
-    );
+    return problemResponse("Invalid audio source.", 400);
   }
 
   try {
@@ -42,10 +40,7 @@ export async function GET(
     );
 
     if (!file) {
-      return NextResponse.json(
-        { error: "Audio source not found." },
-        { status: 404 },
-      );
+      return problemResponse("Audio source not found.", 404);
     }
 
     const upstream = await openDriveDownloadStream(
@@ -56,19 +51,16 @@ export async function GET(
 
     if (upstream.status === 401 || upstream.status === 403) {
       await upstream.body?.cancel();
-      return NextResponse.json(
-        { error: "Google Drive access must be reconnected." },
-        { status: 409 },
-      );
+      return problemResponse("Google Drive access must be reconnected.", 409);
     }
 
     const contentLength = Number(upstream.headers.get("content-length"));
 
     if (!upstream.ok || !upstream.body || contentLength !== file.byteSize) {
       await upstream.body?.cancel();
-      return NextResponse.json(
-        { error: "The source changed or returned an invalid download." },
-        { status: 409 },
+      return problemResponse(
+        "The source changed or returned an invalid download.",
+        409,
       );
     }
 
@@ -81,9 +73,6 @@ export async function GET(
       },
     });
   } catch {
-    return NextResponse.json(
-      { error: "The download is temporarily unavailable." },
-      { status: 502 },
-    );
+    return problemResponse("The download is temporarily unavailable.", 502);
   }
 }

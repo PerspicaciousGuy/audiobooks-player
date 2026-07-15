@@ -51,11 +51,11 @@ async function fetchPickerToken(): Promise<string> {
   });
   const payload = (await response.json()) as {
     accessToken?: string;
-    error?: string;
+    detail?: string;
   };
 
   if (!response.ok || !payload.accessToken) {
-    throw new Error(payload.error ?? "Drive must be reconnected.");
+    throw new Error(payload.detail ?? "Drive must be reconnected.");
   }
 
   return payload.accessToken;

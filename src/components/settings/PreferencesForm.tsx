@@ -32,8 +32,8 @@ export default function PreferencesForm({
         headers: { "content-type": "application/json" },
         method: "PATCH",
       });
-      const body = (await response.json()) as { error?: string };
-      if (!response.ok) throw new Error(body.error ?? "Save failed.");
+      const body = (await response.json()) as { detail?: string };
+      if (!response.ok) throw new Error(body.detail ?? "Save failed.");
       setStatus("Preferences saved across your account.");
       router.refresh();
     } catch (error) {

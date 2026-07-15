@@ -32,8 +32,8 @@ export default function AudiobookMetadataEditor({
         headers: { "content-type": "application/json" },
         method: "PATCH",
       });
-      const body = (await response.json()) as { error?: string };
-      if (!response.ok) throw new Error(body.error ?? "Update failed.");
+      const body = (await response.json()) as { detail?: string };
+      if (!response.ok) throw new Error(body.detail ?? "Update failed.");
       setStatus("Book details updated.");
       setIsOpen(false);
       router.refresh();

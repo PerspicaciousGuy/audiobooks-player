@@ -12,6 +12,7 @@ import {
   mapAudiobook,
   progressRowSchema,
 } from "@/features/library/mapper";
+import { problemResponse } from "@/lib/api/problem";
 import { authorizeRateLimitedRequest } from "@/lib/security/apiAccess";
 
 const libraryRowSchema = audiobookRowSchema.extend({
@@ -29,19 +30,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   });
 
   if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Invalid library query." },
-      { status: 400 },
-    );
+    return problemResponse("Invalid library query.", 400);
   }
 
   const cursor = decodeLibraryCursor(parsed.data.cursor);
 
   if (parsed.data.cursor && !cursor) {
-    return NextResponse.json(
-      { error: "Invalid library cursor." },
-      { status: 400 },
-    );
+    return problemResponse("Invalid library cursor.", 400);
   }
 
   let query = access.supabase
@@ -62,10 +57,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const { data, error } = await query;
 
   if (error) {
-    return NextResponse.json(
-      { error: "The library could not be loaded." },
-      { status: 500 },
-    );
+    return problemResponse("The library could not be loaded.", 500);
   }
 
   const pageRows = libraryRowSchema.array().parse(data ?? []);
@@ -92,10 +84,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   ]);
 
   if (filesResult.error || progressResult.error) {
-    return NextResponse.json(
-      { error: "The library details could not be loaded." },
-      { status: 500 },
-    );
+    return problemResponse("The library details could not be loaded.", 500);
   }
 
   const files = audiobookFileRowSchema.array().parse(filesResult.data ?? []);

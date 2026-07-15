@@ -8,6 +8,7 @@ import {
 import { groupValidatedDriveFiles } from "@/features/imports/grouping";
 import { getDuplicateDriveFileIds } from "@/features/imports/repository";
 import { validateSelectedDriveFiles } from "@/features/imports/service";
+import { problemResponse } from "@/lib/api/problem";
 import { authorizeMutation } from "@/lib/security/apiAccess";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -15,13 +16,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   if (access.response) return access.response;
 
-  const parsed = selectedDriveFilesSchema.safeParse(await request.json());
+  let body: unknown;
+
+  try {
+    body = await request.json();
+  } catch {
+    return problemResponse("Invalid JSON body.", 400);
+  }
+
+  const parsed = selectedDriveFilesSchema.safeParse(body);
 
   if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Select between 1 and 25 valid Drive files." },
-      { status: 400 },
-    );
+    return problemResponse("Select between 1 and 25 valid Drive files.", 400);
   }
 
   try {
@@ -49,9 +55,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       headers: { "cache-control": "no-store, private" },
     });
   } catch {
-    return NextResponse.json(
-      { error: "Selected Drive files could not be validated." },
-      { status: 502 },
-    );
+    return problemResponse("Selected Drive files could not be validated.", 502);
   }
 }

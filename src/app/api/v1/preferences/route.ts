@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { userPreferencesSchema } from "@/features/preferences/contracts";
+import { problemResponse } from "@/lib/api/problem";
 import { authorizeMutation } from "@/lib/security/apiAccess";
 
 export async function PATCH(request: NextRequest): Promise<NextResponse> {
@@ -13,16 +14,13 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+    return problemResponse("Invalid JSON body.", 400);
   }
 
   const preferences = userPreferencesSchema.safeParse(body);
 
   if (!preferences.success) {
-    return NextResponse.json(
-      { error: "Invalid playback preferences." },
-      { status: 400 },
-    );
+    return problemResponse("Invalid playback preferences.", 400);
   }
 
   const { error } = await access.supabase.from("user_preferences").upsert({
@@ -35,10 +33,7 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
   });
 
   if (error) {
-    return NextResponse.json(
-      { error: "Preferences could not be saved." },
-      { status: 422 },
-    );
+    return problemResponse("Preferences could not be saved.", 422);
   }
 
   return NextResponse.json(preferences.data, {

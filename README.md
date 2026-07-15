@@ -27,8 +27,9 @@ playback. Desktop and exact 390x844 mobile browser audits pass without
 horizontal overflow; representative-device install and airplane-mode playback
 remain release gates. Release hardening adds account deletion, origin
 enforcement, private database-backed quotas, CSP/HSTS, redacted structured
-events, accessibility checks, complete versioned library APIs, and
-deployment/incident/OAuth guides.
+events, RFC 9457 API errors, accessibility checks, complete versioned library
+APIs, a repeatable production HTTP smoke check, and deployment/incident/OAuth
+guides.
 
 ## Architecture
 
@@ -78,6 +79,7 @@ Open `http://localhost:3000`. The operational health response is available at
 | `npm run typecheck`        | Run the strict TypeScript compiler check      |
 | `npm run test`             | Run unit tests with Vitest                    |
 | `npm run test:coverage`    | Run unit tests with V8 coverage               |
+| `npm run test:smoke`       | Smoke-test the already-built production app   |
 | `npm run verify`           | Run formatting, lint, types, tests, and build |
 | `npm run supabase:start`   | Start the local Supabase stack with Docker    |
 | `npm run supabase:status`  | Show local Supabase service status            |
@@ -145,8 +147,8 @@ deletes source files from Google Drive.
 ## CI plan
 
 The main-branch and pull-request workflow installs from the lockfile, checks
-formatting, lints, typechecks, runs unit tests, builds, and audits production
-dependencies. pgTAP database/RLS tests are versioned under
+formatting, lints, typechecks, runs unit tests, builds, runs the production HTTP
+smoke check, and audits production dependencies. pgTAP database/RLS tests are versioned under
 `supabase/tests/database` and require a running local or hosted Supabase
 database. The local release audit covers rendered mobile/desktop routes and
 critical interactions through Chrome DevTools; repeatable Playwright journeys

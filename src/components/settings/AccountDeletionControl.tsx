@@ -22,8 +22,8 @@ export default function AccountDeletionControl() {
       const response = await fetch("/api/v1/account", { method: "DELETE" });
 
       if (!response.ok) {
-        const body = (await response.json()) as { error?: string };
-        throw new Error(body.error ?? "Account deletion failed.");
+        const body = (await response.json()) as { detail?: string };
+        throw new Error(body.detail ?? "Account deletion failed.");
       }
 
       await clearOfflineDownloads().catch(() => undefined);

@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { updateAudiobookSchema } from "@/features/library/contracts";
 import { getOwnedAudiobookWithClient } from "@/features/library/repository";
+import { problemResponse } from "@/lib/api/problem";
 import {
   authorizeMutation,
   authorizeRateLimitedRequest,
@@ -26,7 +27,7 @@ export async function GET(
   const audiobookId = audiobookIdSchema.safeParse(rawAudiobookId);
 
   if (!audiobookId.success) {
-    return NextResponse.json({ error: "Invalid audiobook." }, { status: 400 });
+    return problemResponse("Invalid audiobook.", 400);
   }
 
   try {
@@ -39,12 +40,9 @@ export async function GET(
       ? NextResponse.json(audiobook, {
           headers: { "cache-control": "no-store, private" },
         })
-      : NextResponse.json({ error: "Audiobook not found." }, { status: 404 });
+      : problemResponse("Audiobook not found.", 404);
   } catch {
-    return NextResponse.json(
-      { error: "The audiobook could not be loaded." },
-      { status: 500 },
-    );
+    return problemResponse("The audiobook could not be loaded.", 500);
   }
 }
 
@@ -62,17 +60,14 @@ export async function PATCH(
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+    return problemResponse("Invalid JSON body.", 400);
   }
 
   const audiobookId = audiobookIdSchema.safeParse(rawAudiobookId);
   const update = updateAudiobookSchema.safeParse(body);
 
   if (!audiobookId.success || !update.success) {
-    return NextResponse.json(
-      { error: "Invalid audiobook correction." },
-      { status: 400 },
-    );
+    return problemResponse("Invalid audiobook correction.", 400);
   }
 
   const { data, error } = await access.supabase
@@ -83,17 +78,11 @@ export async function PATCH(
     .maybeSingle();
 
   if (error) {
-    return NextResponse.json(
-      { error: "The audiobook could not be updated." },
-      { status: 422 },
-    );
+    return problemResponse("The audiobook could not be updated.", 422);
   }
 
   if (!data) {
-    return NextResponse.json(
-      { error: "Audiobook not found." },
-      { status: 404 },
-    );
+    return problemResponse("Audiobook not found.", 404);
   }
 
   const audiobook = await getOwnedAudiobookWithClient(

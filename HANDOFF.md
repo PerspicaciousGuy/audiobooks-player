@@ -40,43 +40,41 @@ user's browser profile.
   deletion with Drive revocation and Auth/database cascade, same-origin mutation
   checks, private atomic Postgres quotas, CSP/HSTS/cross-origin headers,
   allowlisted JSON events, redaction and accessibility tests, expanded legal
-  content, a security policy, and deployment/OAuth/incident guides. Preference
-  writes use the same authenticated, same-origin, validated, and rate-limited
-  API boundary.
-- CI runs quality, tests, build, and production audit for pull requests and
-  direct pushes to `main`. A separate clean Supabase job applies migrations and
-  runs all pgTAP/RLS tests.
+  content, consistent RFC 9457 errors, a security policy, and
+  deployment/OAuth/incident guides. Preference writes use the same
+  authenticated, same-origin, validated, and rate-limited API boundary.
+- CI runs quality, tests, build, production HTTP smoke, and production audit for
+  pull requests and direct pushes to `main`. A separate clean Supabase job
+  applies migrations and runs all pgTAP/RLS tests.
 
 ## Last Action
 
-Completed the local usability, accessibility, and responsive-browser closure
-pass. The library now searches title/author/narrator and filters all,
-in-progress, device-downloaded, and finished books. Mobile account navigation
-exposes Settings and Sign out. Settings persist validated playback rate, skip
-intervals, default sleep timer, and theme through a protected preference API;
-the player and Media Session consume those defaults. Owned book details can be
-corrected through the existing bounded metadata API.
+Closed the remaining provider-independent verification and API-contract gaps.
+Added behavior tests for pending player state, end-of-chapter and duration sleep
+timers, multi-file advancement, versioned progress validation, exact Drive OAuth
+scope/PKCE/token behavior, server-side Drive file validation, and bounded stream
+retry after a rejected access token.
 
-Fixed the skip link so it is visually hidden until focused, gave settings and
-offline pages proper level-one headings, and added system/dark theme plus global
-reduced-motion behavior. The exact 390x844 and 1440x900 Chrome DevTools audit
-covered landing, application, library, book, offline, settings, onboarding,
-import, legal, and offline-fallback routes with no horizontal overflow. Search,
-finished filtering, the mobile account menu, theme switching, and skip-link
-focus were exercised in the rendered production app.
+Added a dependency-free production smoke runner and made it part of `verify`
+and CI. It starts the built app, checks health, public/legal/PWA resources,
+manifest install metadata, security headers, and anonymous API protection, then
+stops the process. The runner exposed inconsistent API error media types; every
+versioned route now returns standard RFC 9457 fields with
+`application/problem+json`, import endpoints handle malformed JSON explicitly,
+and client error handling consumes the standard `detail` field.
 
 ## Verification
 
-- Formatting, ESLint, strict TypeScript, 45 tests in 18 files, and the 28-route
-  production build pass.
-- `npm run test:coverage`: passed; current measured coverage is 65.23%
-  statements, 54.11% branches, 61.58% functions, and 67.61% lines.
+- `npm run verify`: formatting, ESLint, strict TypeScript, 64 tests in 25 files,
+  the 28-route production build, and the production HTTP smoke check pass.
+- `npm run test:coverage`: passed; current measured coverage is 71.31%
+  statements, 58.8% branches, 67.21% functions, and 73.8% lines.
 - `npm audit --audit-level=high`: zero vulnerabilities.
-- Production HTTP smoke: public/legal/PWA resources return `200`; protected new
-  APIs return `401` anonymously; CSP, one-year HSTS, COOP, CORP, content-type,
-  referrer, and permissions headers are present. The manifest and service worker
-  are served successfully, with authenticated/Range/audio caching excluded by
-  design.
+- Repeatable production HTTP smoke: public/legal/PWA resources return `200`;
+  protected APIs return RFC 9457 `401` responses anonymously; CSP, one-year
+  HSTS, COOP, CORP, content-type, referrer, and permissions headers are present.
+  The manifest and service worker are served successfully, with
+  authenticated/Range/audio caching excluded by design.
 - Repository audit: `git diff --check` passes, no TS/TSX file exceeds 200 lines,
   and no API-key, private-key, or JWT-shaped secret was found.
 - Development and production servers are stopped.
@@ -110,10 +108,11 @@ Follow `docs/DEPLOYMENT.md` for the release order,
 
 - No Docker, hosted Supabase project, Google OAuth clients, production domain,
   or deploy target are configured. No credentials were invented or committed.
-- The in-app browser integration has no available instance. An isolated
-  headless Chrome session supplied exact desktop/mobile screenshots and DOM
-  interaction evidence instead; physical-device accessibility/performance and
-  install/offline-audio checks remain external.
+- The in-app browser integration package is missing its required browser client.
+  An earlier isolated headless Chrome session supplied exact desktop/mobile
+  screenshots and DOM interaction evidence; repeatable Playwright journeys and
+  physical-device accessibility/performance/install/offline-audio checks remain
+  external.
 - Unknown dynamic audiobook pages currently render noindex not-found UI with a
   streamed HTTP `200`; retain this known Next.js behavior unless a host-level
   hard `404` requirement is added.
@@ -124,12 +123,12 @@ Follow `docs/DEPLOYMENT.md` for the release order,
 
 ## Files Status
 
-- Created: interactive library browser; mobile account menu; metadata editor;
-  preference contracts, repository, API, UI, and tests; extracted player audio
-  source hook; preference pgTAP coverage.
-- Modified: application layout/shell, library/detail/offline/settings routes,
-  player controls and defaults, design tokens, rate-limit migration/tests,
-  README, implementation plan, and this handoff.
+- Created: player/progress/Drive/OAuth/stream contract tests, the RFC 9457
+  response helper and tests, the test-only server boundary, and the production
+  HTTP smoke runner.
+- Modified: all versioned API error paths and their client consumers, import JSON
+  handling, Vitest server-module resolution, package scripts, CI, README,
+  implementation plan, and this handoff.
 - Currently being edited: none.
 - Next work: external staging/provider/browser validation only, followed by fixes
   if those evidence-based checks find issues.

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { openDriveRangeStream } from "@/features/streaming/driveStream";
 import { parseBoundedRange } from "@/features/streaming/range";
 import { getOwnedStreamFile } from "@/features/streaming/repository";
+import { problemResponse } from "@/lib/api/problem";
 import { authorizeRateLimitedRequest } from "@/lib/security/apiAccess";
 
 const identifiersSchema = z.object({
@@ -40,10 +41,7 @@ export async function GET(
   });
 
   if (!identifiers.success) {
-    return NextResponse.json(
-      { error: "Invalid audio source." },
-      { status: 400 },
-    );
+    return problemResponse("Invalid audio source.", 400);
   }
 
   try {
@@ -53,10 +51,7 @@ export async function GET(
     );
 
     if (!file) {
-      return NextResponse.json(
-        { error: "Audio source not found." },
-        { status: 404 },
-      );
+      return problemResponse("Audio source not found.", 404);
     }
 
     const range = parseBoundedRange(
@@ -74,25 +69,19 @@ export async function GET(
 
     if (upstream.status === 404) {
       await upstream.body?.cancel();
-      return NextResponse.json(
-        { error: "Source file is missing." },
-        { status: 404 },
-      );
+      return problemResponse("Source file is missing.", 404);
     }
 
     if (upstream.status === 401 || upstream.status === 403) {
       await upstream.body?.cancel();
-      return NextResponse.json(
-        { error: "Google Drive access must be reconnected." },
-        { status: 409 },
-      );
+      return problemResponse("Google Drive access must be reconnected.", 409);
     }
 
     if (upstream.status === 416) {
       await upstream.body?.cancel();
-      return NextResponse.json(
-        { error: "The source file changed and must be refreshed." },
-        { status: 409 },
+      return problemResponse(
+        "The source file changed and must be refreshed.",
+        409,
       );
     }
 
@@ -108,9 +97,9 @@ export async function GET(
       contentLength !== range.length
     ) {
       await upstream.body?.cancel();
-      return NextResponse.json(
-        { error: "Drive returned an invalid partial response." },
-        { status: 502 },
+      return problemResponse(
+        "Drive returned an invalid partial response.",
+        502,
       );
     }
 
@@ -126,9 +115,6 @@ export async function GET(
       status: 206,
     });
   } catch {
-    return NextResponse.json(
-      { error: "The audio stream is temporarily unavailable." },
-      { status: 502 },
-    );
+    return problemResponse("The audio stream is temporarily unavailable.", 502);
   }
 }

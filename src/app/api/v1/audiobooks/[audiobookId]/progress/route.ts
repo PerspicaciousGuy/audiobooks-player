@@ -5,6 +5,7 @@ import {
   progressCheckpointSchema,
   savedProgressSchema,
 } from "@/features/progress/contracts";
+import { problemResponse } from "@/lib/api/problem";
 import { authorizeMutation } from "@/lib/security/apiAccess";
 
 const audiobookIdSchema = z.string().uuid();
@@ -27,26 +28,23 @@ export async function PUT(
   try {
     requestBody = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+    return problemResponse("Invalid JSON body.", 400);
   }
 
   const audiobookId = audiobookIdSchema.safeParse(rawAudiobookId);
   const checkpoint = progressCheckpointSchema.safeParse(requestBody);
 
   if (!audiobookId.success || !checkpoint.success) {
-    return NextResponse.json(
-      { error: "The progress checkpoint is invalid." },
-      { status: 400 },
-    );
+    return problemResponse("The progress checkpoint is invalid.", 400);
   }
 
   if (
     new Date(checkpoint.data.clientUpdatedAt).getTime() >
     Date.now() + 5 * 60_000
   ) {
-    return NextResponse.json(
-      { error: "The checkpoint time is too far in the future." },
-      { status: 400 },
+    return problemResponse(
+      "The checkpoint time is too far in the future.",
+      400,
     );
   }
 
@@ -62,19 +60,13 @@ export async function PUT(
   });
 
   if (error) {
-    return NextResponse.json(
-      { error: "The progress checkpoint could not be saved." },
-      { status: 422 },
-    );
+    return problemResponse("The progress checkpoint could not be saved.", 422);
   }
 
   const saved = savedProgressSchema.safeParse(data);
 
   if (!saved.success) {
-    return NextResponse.json(
-      { error: "The progress response was invalid." },
-      { status: 502 },
-    );
+    return problemResponse("The progress response was invalid.", 502);
   }
 
   return NextResponse.json(saved.data, {

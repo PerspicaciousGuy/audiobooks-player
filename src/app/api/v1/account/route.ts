@@ -4,6 +4,7 @@ import { getGoogleDriveRuntimeConfig } from "@/features/drive/config";
 import { revokeGoogleToken } from "@/features/drive/googleOAuth";
 import { getDriveConnection } from "@/features/drive/repository";
 import { decryptDriveCredentials } from "@/features/drive/tokenEncryption";
+import { problemResponse } from "@/lib/api/problem";
 import { authorizeMutation } from "@/lib/security/apiAccess";
 import { recordServerEvent } from "@/lib/observability/logger";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
@@ -25,9 +26,9 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
           outcome: "unavailable",
           status: 503,
         });
-        return NextResponse.json(
-          { error: "Drive revocation is temporarily unavailable." },
-          { status: 503 },
+        return problemResponse(
+          "Drive revocation is temporarily unavailable.",
+          503,
         );
       }
 
@@ -43,9 +44,9 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
           outcome: "failure",
           status: 502,
         });
-        return NextResponse.json(
-          { error: "Google could not confirm Drive revocation. Try again." },
-          { status: 502 },
+        return problemResponse(
+          "Google could not confirm Drive revocation. Try again.",
+          502,
         );
       }
     }
@@ -60,9 +61,9 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
         outcome: "failure",
         status: 503,
       });
-      return NextResponse.json(
-        { error: "The account session could not be closed safely." },
-        { status: 503 },
+      return problemResponse(
+        "The account session could not be closed safely.",
+        503,
       );
     }
 
@@ -74,9 +75,9 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
         outcome: "unavailable",
         status: 503,
       });
-      return NextResponse.json(
-        { error: "Account deletion is temporarily unavailable." },
-        { status: 503 },
+      return problemResponse(
+        "Account deletion is temporarily unavailable.",
+        503,
       );
     }
 
@@ -88,9 +89,9 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
         outcome: "failure",
         status: 500,
       });
-      return NextResponse.json(
-        { error: "The account could not be deleted. Sign in and retry." },
-        { status: 500 },
+      return problemResponse(
+        "The account could not be deleted. Sign in and retry.",
+        500,
       );
     }
 
@@ -110,9 +111,9 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
       outcome: "failure",
       status: 500,
     });
-    return NextResponse.json(
-      { error: "Account deletion could not be completed safely." },
-      { status: 500 },
+    return problemResponse(
+      "Account deletion could not be completed safely.",
+      500,
     );
   }
 }

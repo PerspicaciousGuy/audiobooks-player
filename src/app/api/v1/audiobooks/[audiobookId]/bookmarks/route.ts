@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
 import { createBookmarkSchema } from "@/features/bookmarks/contracts";
+import { problemResponse } from "@/lib/api/problem";
 import { authorizeMutation } from "@/lib/security/apiAccess";
 
 const audiobookIdSchema = z.string().uuid();
@@ -24,17 +25,14 @@ export async function POST(
   try {
     requestBody = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+    return problemResponse("Invalid JSON body.", 400);
   }
 
   const audiobookId = audiobookIdSchema.safeParse(rawAudiobookId);
   const bookmark = createBookmarkSchema.safeParse(requestBody);
 
   if (!audiobookId.success || !bookmark.success) {
-    return NextResponse.json(
-      { error: "The bookmark is invalid." },
-      { status: 400 },
-    );
+    return problemResponse("The bookmark is invalid.", 400);
   }
 
   const { data, error } = await access.supabase
@@ -51,10 +49,7 @@ export async function POST(
     .single();
 
   if (error) {
-    return NextResponse.json(
-      { error: "The bookmark could not be saved." },
-      { status: 422 },
-    );
+    return problemResponse("The bookmark could not be saved.", 422);
   }
 
   return NextResponse.json(data, { status: 201 });

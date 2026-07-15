@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { problemResponse } from "@/lib/api/problem";
 import { authorizeMutation } from "@/lib/security/apiAccess";
 
 interface BookmarkRouteContext {
@@ -19,7 +20,7 @@ export async function DELETE(
   const bookmarkId = z.string().uuid().safeParse(rawBookmarkId);
 
   if (!bookmarkId.success) {
-    return NextResponse.json({ error: "Invalid bookmark." }, { status: 400 });
+    return problemResponse("Invalid bookmark.", 400);
   }
 
   const { data, error } = await access.supabase
@@ -31,14 +32,11 @@ export async function DELETE(
     .maybeSingle();
 
   if (error) {
-    return NextResponse.json(
-      { error: "The bookmark could not be deleted." },
-      { status: 500 },
-    );
+    return problemResponse("The bookmark could not be deleted.", 500);
   }
 
   if (!data) {
-    return NextResponse.json({ error: "Bookmark not found." }, { status: 404 });
+    return problemResponse("Bookmark not found.", 404);
   }
 
   return new NextResponse(null, { status: 204 });
