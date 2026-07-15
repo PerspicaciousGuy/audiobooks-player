@@ -8,7 +8,9 @@ import {
   type ReactNode,
 } from "react";
 
-import type { Audiobook, Chapter } from "@/types/audiobook";
+import { useProgressSync } from "@/features/progress/useProgressSync";
+import { useBookmarkActions } from "@/features/bookmarks/useBookmarkActions";
+import type { Audiobook } from "@/types/audiobook";
 
 import PlayerAudio from "./PlayerAudio";
 import {
@@ -20,6 +22,7 @@ import {
 } from "./context";
 import { useMediaSession } from "./useMediaSession";
 import { useSleepTimer } from "./useSleepTimer";
+import { useSourceSelection } from "./useSourceSelection";
 
 export default function PlayerProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -35,6 +38,19 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
   const [sleepMode, setSleepMode] = useState<SleepMode>("off");
   const [error, setError] = useState<string>();
   const source = audiobook?.sources?.[sourceIndex];
+  const { saveCheckpoint } = useProgressSync({
+    audiobook,
+    currentTime,
+    duration,
+    isPlaying,
+    playbackRate,
+    sourceId: source?.id,
+  });
+  const { addBookmark, bookmarkStatus } = useBookmarkActions({
+    audiobook,
+    currentTime,
+    sourceId: source?.id,
+  });
 
   useMediaSession(audiobook, audioRef);
   useSleepTimer(audioRef, sleepMode, setSleepMode);
@@ -73,61 +89,23 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const selectSource = useCallback(
-    (
-      nextAudiobook: Audiobook,
-      nextSourceIndex: number,
-      seekSeconds: number,
-    ) => {
-      if (!nextAudiobook.sources?.length) {
-        setError("This preview book does not have a connected audio source.");
-        return;
-      }
-
-      const audio = audioRef.current;
-      const isCurrentSource =
-        audiobook?.id === nextAudiobook.id && sourceIndex === nextSourceIndex;
-
-      if (audio && isCurrentSource) {
-        audio.currentTime = seekSeconds;
-        void audio
-          .play()
-          .catch(() => setError("Playback could not start from Google Drive."));
-        return;
-      }
-
-      pendingSeekRef.current = seekSeconds;
-      shouldAutoplayRef.current = true;
-      setSourceIndex(nextSourceIndex);
-      setAudiobook(nextAudiobook);
-    },
-    [audiobook?.id, sourceIndex],
-  );
-
-  const playAudiobook = useCallback(
-    (nextAudiobook: Audiobook) => selectSource(nextAudiobook, 0, 0),
-    [selectSource],
-  );
-
-  const playChapter = useCallback(
-    (nextAudiobook: Audiobook, chapter: Chapter) => {
-      const nextSourceIndex = Math.max(
-        0,
-        nextAudiobook.sources?.findIndex(
-          ({ id }) => id === chapter.audiobookFileId,
-        ) ?? 0,
-      );
-      selectSource(
-        nextAudiobook,
-        nextSourceIndex,
-        (chapter.startMs ?? 0) / 1_000,
-      );
-    },
-    [selectSource],
-  );
+  const { playAudiobook: selectAudiobook, playChapter: selectChapter } =
+    useSourceSelection({
+      audioRef,
+      audiobook,
+      pendingSeekRef,
+      setAudiobook,
+      setError,
+      setPlaybackRate,
+      setSourceIndex,
+      shouldAutoplayRef,
+      sourceIndex,
+    });
 
   const value: PlayerContextValue = {
+    addBookmark,
     ...(audiobook ? { audiobook } : {}),
+    ...(bookmarkStatus ? { bookmarkStatus } : {}),
     currentTime,
     ...(source ? { currentSourceId: source.id } : {}),
     cyclePlaybackRate: () => {
@@ -145,8 +123,14 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
     duration,
     ...(error ? { error } : {}),
     isPlaying,
-    playAudiobook,
-    playChapter,
+    playAudiobook: (nextAudiobook) => {
+      void saveCheckpoint();
+      selectAudiobook(nextAudiobook);
+    },
+    playChapter: (nextAudiobook, chapter) => {
+      void saveCheckpoint();
+      selectChapter(nextAudiobook, chapter);
+    },
     playbackRate,
     seek,
     setVolume: (nextVolume) => {
@@ -185,6 +169,7 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
         }
         onPlaying={setIsPlaying}
         onSleepComplete={() => setSleepMode("off")}
+        onSourceEnded={() => void saveCheckpoint()}
         pendingSeekRef={pendingSeekRef}
         playbackRate={playbackRate}
         shouldAutoplayRef={shouldAutoplayRef}

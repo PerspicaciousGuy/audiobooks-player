@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import BookCover from "@/components/library/BookCover";
+import BookmarkList from "@/components/player/BookmarkList";
 import ChapterList from "@/components/player/ChapterList";
 import ExpandedPlayer from "@/components/player/ExpandedPlayer";
 import ActionLink from "@/components/ui/ActionLink";
@@ -110,31 +111,7 @@ export default async function AudiobookPage({ params }: AudiobookPageProps) {
         </section>
         <aside className="flex flex-col gap-6">
           <SectionHeading title="Bookmarks" />
-          {audiobook.bookmarks.length > 0 ? (
-            <ul className="flex flex-col gap-3">
-              {audiobook.bookmarks.map((bookmark) => (
-                <li
-                  className="border-border bg-paper-elevated rounded-card flex gap-3 border p-4"
-                  key={bookmark.id}
-                >
-                  <Icon
-                    className="text-action-strong mt-1 size-4 shrink-0"
-                    name="bookmark"
-                  />
-                  <div>
-                    <p className="text-sm font-semibold">{bookmark.label}</p>
-                    <p className="text-ink-muted mt-1 text-xs">
-                      {bookmark.chapterTitle} · {bookmark.timestamp}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-ink-muted bg-surface-muted rounded-card p-5 text-sm">
-              No bookmarks yet. Add one while listening to return to a moment.
-            </p>
-          )}
+          <BookmarkList bookmarks={audiobook.bookmarks} />
         </aside>
       </div>
     </div>

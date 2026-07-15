@@ -9,7 +9,9 @@ export type SleepMode = "off" | "15" | "30" | "60" | "chapter";
 export const SLEEP_MODES: SleepMode[] = ["off", "15", "30", "60", "chapter"];
 
 export interface PlayerContextValue {
+  addBookmark: () => Promise<void>;
   audiobook?: Audiobook;
+  bookmarkStatus?: string;
   currentTime: number;
   currentSourceId?: string;
   cyclePlaybackRate: () => void;

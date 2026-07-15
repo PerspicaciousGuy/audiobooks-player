@@ -7,16 +7,18 @@ storage, while synchronizing metadata, progress, bookmarks, and preferences.
 
 ## Current status
 
-Phases 0 and 1 are implemented, and the Phase 2-4 application code is complete
+Phases 0 and 1 are implemented, and the Phase 2-5 application code is complete
 pending live-provider verification. The repository includes the responsive
 visual shell, RLS-backed Supabase sessions, separate secure Drive authorization,
 explicit-action Google Picker loading, server-side Drive validation, bounded
 ID3 metadata/chapter parsing, editable file grouping, duplicate handling, and a
 transactional import into the real library. The shared player uses one audio
 element, an authenticated bounded-Range proxy, multi-file continuation, chapter
-jumps, Media Session, rate, volume, and sleep controls. Progress sync, offline
-storage, and the service worker remain later-phase work. Final desktop/mobile
-visual approval for Phase 1 also remains pending.
+jumps, Media Session, rate, volume, and sleep controls. Versioned progress uses
+atomic stale-write rejection and a bounded device retry queue; resume,
+completion, and bookmark add/delete are integrated into the player. Offline
+audio storage and the service worker remain later-phase work. Final
+desktop/mobile visual approval for Phase 1 also remains pending.
 
 ## Architecture
 
@@ -111,6 +113,13 @@ confirmation never trusts Picker metadata from the browser; the server
 re-fetches every selected Drive file before calling the single-transaction
 database function. Streaming forwards one capped Range and pipes the Drive body
 without buffering the audiobook in application memory.
+
+Playback persistence uses
+`PUT /api/v1/audiobooks/[audiobookId]/progress`,
+`POST /api/v1/audiobooks/[audiobookId]/bookmarks`, and
+`DELETE /api/v1/bookmarks/[bookmarkId]`. Progress responses return the accepted
+server version; stale timestamps or expected versions cannot overwrite newer
+listening positions.
 
 ## CI plan
 

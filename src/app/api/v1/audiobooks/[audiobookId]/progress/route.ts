@@ -1,0 +1,91 @@
+import { NextResponse, type NextRequest } from "next/server";
+import { z } from "zod";
+
+import { getAuthenticatedIdentity } from "@/features/auth/session";
+import {
+  progressCheckpointSchema,
+  savedProgressSchema,
+} from "@/features/progress/contracts";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+
+const audiobookIdSchema = z.string().uuid();
+
+interface ProgressRouteContext {
+  params: Promise<{ audiobookId: string }>;
+}
+
+export async function PUT(
+  request: NextRequest,
+  context: ProgressRouteContext,
+): Promise<NextResponse> {
+  const identity = await getAuthenticatedIdentity();
+  const supabase = await createServerSupabaseClient();
+
+  if (!identity || !supabase) {
+    return NextResponse.json(
+      { error: "Authentication required." },
+      { status: 401 },
+    );
+  }
+
+  const { audiobookId: rawAudiobookId } = await context.params;
+  let requestBody: unknown;
+
+  try {
+    requestBody = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+  }
+
+  const audiobookId = audiobookIdSchema.safeParse(rawAudiobookId);
+  const checkpoint = progressCheckpointSchema.safeParse(requestBody);
+
+  if (!audiobookId.success || !checkpoint.success) {
+    return NextResponse.json(
+      { error: "The progress checkpoint is invalid." },
+      { status: 400 },
+    );
+  }
+
+  if (
+    new Date(checkpoint.data.clientUpdatedAt).getTime() >
+    Date.now() + 5 * 60_000
+  ) {
+    return NextResponse.json(
+      { error: "The checkpoint time is too far in the future." },
+      { status: 400 },
+    );
+  }
+
+  const { data, error } = await supabase.rpc("save_playback_progress", {
+    p_audiobook_file_id: checkpoint.data.audiobookFileId,
+    p_audiobook_id: audiobookId.data,
+    p_chapter_id: checkpoint.data.chapterId,
+    p_client_updated_at: checkpoint.data.clientUpdatedAt,
+    p_expected_version: checkpoint.data.expectedVersion,
+    p_is_completed: checkpoint.data.isCompleted,
+    p_playback_rate: checkpoint.data.playbackRate,
+    p_position_ms: checkpoint.data.positionMs,
+  });
+
+  if (error) {
+    return NextResponse.json(
+      { error: "The progress checkpoint could not be saved." },
+      { status: 422 },
+    );
+  }
+
+  const saved = savedProgressSchema.safeParse(data);
+
+  if (!saved.success) {
+    return NextResponse.json(
+      { error: "The progress response was invalid." },
+      { status: 502 },
+    );
+  }
+
+  return NextResponse.json(saved.data, {
+    headers: { "cache-control": "no-store, private" },
+    status: saved.data.accepted ? 200 : 409,
+  });
+}

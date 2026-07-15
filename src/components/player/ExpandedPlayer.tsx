@@ -105,6 +105,15 @@ export default function ExpandedPlayer({ audiobook }: ExpandedPlayerProps) {
           >
             <Icon className="size-5 rotate-180" name="rewind" />
           </button>
+          <button
+            aria-label="Add bookmark"
+            className="hover:bg-paper-elevated/10 focus-visible:ring-action grid size-11 place-items-center rounded-full focus-visible:ring-2 focus-visible:outline-none disabled:opacity-40"
+            disabled={!isActive}
+            onClick={() => void player.addBookmark()}
+            type="button"
+          >
+            <Icon className="size-5" name="bookmark" />
+          </button>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-start">
           <button
@@ -145,6 +154,10 @@ export default function ExpandedPlayer({ audiobook }: ExpandedPlayerProps) {
         ) : isActive && player.error ? (
           <p className="text-action text-sm" role="alert">
             {player.error}
+          </p>
+        ) : player.bookmarkStatus ? (
+          <p className="text-action text-sm" role="status">
+            {player.bookmarkStatus}
           </p>
         ) : null}
       </div>

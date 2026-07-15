@@ -19,6 +19,15 @@ export interface AudioSource {
   sequence: number;
 }
 
+export interface ResumePoint {
+  audiobookFileId: string | null;
+  chapterId: string | null;
+  clientUpdatedAt: string;
+  playbackRate: number;
+  positionMs: number;
+  version: number;
+}
+
 export interface Bookmark {
   id: string;
   label: string;
@@ -43,4 +52,5 @@ export interface Audiobook {
   chapters: readonly Chapter[];
   bookmarks: readonly Bookmark[];
   sources?: readonly AudioSource[];
+  resume?: ResumePoint;
 }

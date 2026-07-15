@@ -8,6 +8,10 @@ import type { Audiobook } from "@/types/audiobook";
 import { usePlayer } from "./context";
 import PlayerProvider from "./PlayerProvider";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
+
 const AUDIOBOOK: Audiobook = {
   author: "Ursula K. Le Guin",
   bookmarks: [],

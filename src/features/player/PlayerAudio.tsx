@@ -15,6 +15,7 @@ interface PlayerAudioProps {
   onDuration: (seconds: number) => void;
   onError: () => void;
   onPlaying: (isPlaying: boolean) => void;
+  onSourceEnded: () => void;
   onSleepComplete: () => void;
   pendingSeekRef: MutableRefObject<number>;
   playbackRate: number;
@@ -33,6 +34,7 @@ export default function PlayerAudio({
   onDuration,
   onError,
   onPlaying,
+  onSourceEnded,
   onSleepComplete,
   pendingSeekRef,
   playbackRate,
@@ -55,6 +57,7 @@ export default function PlayerAudio({
       }}
       onDurationChange={(event) => onDuration(event.currentTarget.duration)}
       onEnded={() => {
+        onSourceEnded();
         if (hasNextSource) {
           shouldAutoplayRef.current = true;
           onAdvanceSource();

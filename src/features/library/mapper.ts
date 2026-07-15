@@ -28,8 +28,13 @@ export const audiobookFileRowSchema = z.object({
 
 export const progressRowSchema = z.object({
   audiobook_id: z.string().uuid(),
+  audiobook_file_id: z.string().uuid().nullable(),
+  chapter_id: z.string().uuid().nullable(),
+  client_updated_at: z.string().datetime(),
   is_completed: z.boolean(),
+  playback_rate: z.coerce.number(),
   position_ms: z.number(),
+  version: z.coerce.number().int().positive(),
 });
 
 export const chapterRowSchema = z.object({
@@ -167,5 +172,17 @@ export function mapAudiobook(
     progressPercent,
     sources,
     title: row.title,
+    ...(progress
+      ? {
+          resume: {
+            audiobookFileId: progress.audiobook_file_id,
+            chapterId: progress.chapter_id,
+            clientUpdatedAt: progress.client_updated_at,
+            playbackRate: progress.playback_rate,
+            positionMs: progress.position_ms,
+            version: progress.version,
+          },
+        }
+      : {}),
   };
 }
