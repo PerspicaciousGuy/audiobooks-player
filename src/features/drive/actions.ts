@@ -24,18 +24,20 @@ export async function disconnectGoogleDrive(): Promise<never> {
     redirect("/app/settings?drive=disconnected");
   }
 
+  let wasRevoked: boolean;
+
   try {
     const credentials = decryptDriveCredentials(
       connection.encryptedTokenEnvelope,
       config.tokenEncryptionKey,
       identity.id,
     );
-    const wasRevoked = await revokeGoogleToken(credentials.refreshToken);
-
-    if (!wasRevoked) {
-      redirect("/app/settings?drive=retry-disconnect");
-    }
+    wasRevoked = await revokeGoogleToken(credentials.refreshToken);
   } catch {
+    redirect("/app/settings?drive=retry-disconnect");
+  }
+
+  if (!wasRevoked) {
     redirect("/app/settings?drive=retry-disconnect");
   }
 

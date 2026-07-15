@@ -96,6 +96,40 @@ export async function exchangeGoogleDriveCode(
   };
 }
 
+export async function refreshGoogleDriveAccess(
+  config: GoogleDriveRuntimeConfig,
+  refreshToken: string,
+  existingScopes: string[],
+): Promise<GoogleTokenGrant> {
+  const response = await fetchWithTimeout(
+    "https://oauth2.googleapis.com/token",
+    {
+      body: new URLSearchParams({
+        client_id: config.clientId,
+        client_secret: config.clientSecret,
+        grant_type: "refresh_token",
+        refresh_token: refreshToken,
+      }),
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      method: "POST",
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error("Google rejected the Drive token refresh.");
+  }
+
+  const token = tokenResponseSchema.parse(await response.json());
+
+  return {
+    accessToken: token.access_token,
+    expiresAt: new Date(Date.now() + token.expires_in * 1_000).toISOString(),
+    refreshToken,
+    scopes: token.scope?.split(" ").filter(Boolean) ?? existingScopes,
+    tokenType: token.token_type,
+  };
+}
+
 export async function getGoogleDriveSubject(
   accessToken: string,
 ): Promise<string> {

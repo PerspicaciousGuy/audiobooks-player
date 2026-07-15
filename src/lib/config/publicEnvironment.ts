@@ -10,6 +10,10 @@ export interface PublicSupabaseConfig {
   url: string;
 }
 
+export function getPublicGooglePickerApiKey(): string | undefined {
+  return process.env.NEXT_PUBLIC_GOOGLE_PICKER_API_KEY || undefined;
+}
+
 export function getPublicSupabaseConfig(): PublicSupabaseConfig {
   return publicSupabaseSchema.parse({
     publishableKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,

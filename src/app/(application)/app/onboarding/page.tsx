@@ -121,19 +121,25 @@ export default async function OnboardingPage({
           </ul>
           <ActionLink
             href={
-              isDriveEnabled
-                ? "/auth/drive/start?next=/app/onboarding"
-                : "/app/library"
+              drive === "connected"
+                ? "/app/import"
+                : isDriveEnabled
+                  ? "/auth/drive/start?next=/app/onboarding"
+                  : "/app/library"
             }
           >
-            {isDriveEnabled
-              ? "Continue with Google Drive"
-              : "Explore the UI preview"}
+            {drive === "connected"
+              ? "Choose audiobook files"
+              : isDriveEnabled
+                ? "Continue with Google Drive"
+                : "Explore the UI preview"}
           </ActionLink>
           <p className="text-ink-muted text-xs">
-            {isDriveEnabled
-              ? "You will be redirected to Google, then returned here."
-              : "Enable Google Drive server configuration to test real authorization."}
+            {drive === "connected"
+              ? "Picker will load only after you choose to open it."
+              : isDriveEnabled
+                ? "You will be redirected to Google, then returned here."
+                : "Enable Google Drive server configuration to test real authorization."}
           </p>
         </div>
         {previewBook ? (

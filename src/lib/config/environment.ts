@@ -13,6 +13,7 @@ const environmentSchema = z
     driveTokenEncryptionKey: z.string().min(1).optional(),
     googleDriveClientId: z.string().min(1).optional(),
     googleDriveClientSecret: z.string().min(1).optional(),
+    googlePickerApiKey: z.string().min(1).optional(),
     supabasePublishableKey: z.string().min(1).optional(),
     supabaseSecretKey: z.string().min(1).optional(),
     supabaseUrl: z.string().url().optional(),
@@ -40,6 +41,7 @@ const environmentSchema = z
       const requiredDriveValues = [
         ["googleDriveClientId", value.googleDriveClientId],
         ["googleDriveClientSecret", value.googleDriveClientSecret],
+        ["googlePickerApiKey", value.googlePickerApiKey],
         ["driveTokenEncryptionKey", value.driveTokenEncryptionKey],
       ] as const;
 
@@ -63,6 +65,8 @@ export const environment = environmentSchema.parse({
   driveTokenEncryptionKey: process.env.DRIVE_TOKEN_ENCRYPTION_KEY || undefined,
   googleDriveClientId: process.env.GOOGLE_DRIVE_CLIENT_ID || undefined,
   googleDriveClientSecret: process.env.GOOGLE_DRIVE_CLIENT_SECRET || undefined,
+  googlePickerApiKey:
+    process.env.NEXT_PUBLIC_GOOGLE_PICKER_API_KEY || undefined,
   supabasePublishableKey:
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || undefined,
   supabaseSecretKey: process.env.SUPABASE_SECRET_KEY || undefined,

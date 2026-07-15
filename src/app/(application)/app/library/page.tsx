@@ -4,6 +4,7 @@ import BookCard from "@/components/library/BookCard";
 import CollectionState from "@/components/states/CollectionState";
 import ActionLink from "@/components/ui/ActionLink";
 import Icon from "@/components/ui/Icon";
+import { getOwnedAudiobooks } from "@/features/library/repository";
 import { MOCK_AUDIOBOOKS } from "@/lib/mock/library";
 
 export const metadata: Metadata = {
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 interface LibraryPageProps {
-  searchParams: Promise<{ state?: string }>;
+  searchParams: Promise<{ imported?: string; state?: string }>;
 }
 
 const FILTERS = ["All books", "In progress", "Downloaded", "Finished"] as const;
@@ -24,14 +25,20 @@ function isPreviewState(
 }
 
 export default async function LibraryPage({ searchParams }: LibraryPageProps) {
-  const { state } = await searchParams;
+  const { imported, state } = await searchParams;
+  const ownedAudiobooks = await getOwnedAudiobooks();
+  const isPreviewMode = ownedAudiobooks === undefined;
+  const audiobooks = ownedAudiobooks ?? [...MOCK_AUDIOBOOKS];
+  const displayState =
+    state ?? (!isPreviewMode && audiobooks.length === 0 ? "empty" : undefined);
 
   return (
     <div className="flex flex-col gap-8 py-8 sm:py-10 lg:py-12">
       <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col gap-2">
           <p className="text-action-strong text-xs font-bold tracking-widest uppercase">
-            Six selected books
+            {audiobooks.length} selected book
+            {audiobooks.length === 1 ? "" : "s"}
           </p>
           <h1 className="font-display text-4xl font-semibold sm:text-5xl">
             Your library
@@ -41,12 +48,22 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
           </p>
         </div>
         <ActionLink
-          href="/app/onboarding"
+          href="/app/import"
           icon={<Icon className="size-4" name="plus" />}
         >
           Add books
         </ActionLink>
       </header>
+
+      {imported ? (
+        <p
+          className="bg-action-soft rounded-control px-4 py-3 text-sm"
+          role="status"
+        >
+          Imported {imported} audiobook{imported === "1" ? "" : "s"} into your
+          library.
+        </p>
+      ) : null}
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <label className="relative block w-full max-w-xl">
@@ -84,23 +101,25 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
         </div>
       </div>
 
-      {isPreviewState(state) ? (
-        <CollectionState variant={state} />
+      {isPreviewState(displayState) ? (
+        <CollectionState variant={displayState} />
       ) : (
         <section
           aria-label="Audiobooks"
           className="grid grid-cols-2 gap-x-4 gap-y-9 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
         >
-          {MOCK_AUDIOBOOKS.map((audiobook) => (
+          {audiobooks.map((audiobook) => (
             <BookCard audiobook={audiobook} key={audiobook.id} />
           ))}
         </section>
       )}
 
-      <p className="text-ink-muted text-center text-xs">
-        Preview states: add <code>?state=empty</code>,{" "}
-        <code>?state=loading</code>, or <code>?state=error</code> to this URL.
-      </p>
+      {isPreviewMode ? (
+        <p className="text-ink-muted text-center text-xs">
+          Preview states: add <code>?state=empty</code>,{" "}
+          <code>?state=loading</code>, or <code>?state=error</code> to this URL.
+        </p>
+      ) : null}
     </div>
   );
 }

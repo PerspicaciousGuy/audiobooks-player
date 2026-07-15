@@ -7,26 +7,28 @@ import ExpandedPlayer from "@/components/player/ExpandedPlayer";
 import ActionLink from "@/components/ui/ActionLink";
 import Icon from "@/components/ui/Icon";
 import SectionHeading from "@/components/ui/SectionHeading";
-import { getAudiobookById, MOCK_AUDIOBOOKS } from "@/lib/mock/library";
+import { getOwnedAudiobook } from "@/features/library/repository";
+import { getAudiobookById } from "@/lib/mock/library";
 
 interface AudiobookPageProps {
   params: Promise<{ audiobookId: string }>;
 }
 
-export const dynamicParams = false;
-
-export function generateStaticParams(): { audiobookId: string }[] {
-  return MOCK_AUDIOBOOKS.map((audiobook) => ({ audiobookId: audiobook.id }));
+async function resolveAudiobook(audiobookId: string) {
+  const ownedAudiobook = await getOwnedAudiobook(audiobookId);
+  return ownedAudiobook === undefined
+    ? getAudiobookById(audiobookId)
+    : (ownedAudiobook ?? undefined);
 }
 
 export async function generateMetadata({
   params,
 }: AudiobookPageProps): Promise<Metadata> {
   const { audiobookId } = await params;
-  const audiobook = getAudiobookById(audiobookId);
+  const audiobook = await resolveAudiobook(audiobookId);
 
   if (audiobook === undefined) {
-    return { title: "Audiobook not found" };
+    notFound();
   }
 
   return {
@@ -37,7 +39,7 @@ export async function generateMetadata({
 
 export default async function AudiobookPage({ params }: AudiobookPageProps) {
   const { audiobookId } = await params;
-  const audiobook = getAudiobookById(audiobookId);
+  const audiobook = await resolveAudiobook(audiobookId);
 
   if (audiobook === undefined) {
     notFound();

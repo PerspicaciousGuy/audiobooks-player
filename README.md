@@ -7,14 +7,14 @@ storage, while synchronizing metadata, progress, bookmarks, and preferences.
 
 ## Current status
 
-Phases 0 and 1 are implemented, and the Phase 2 database/authentication code is
-complete pending live-provider verification. The repository includes the
-responsive visual shell, a migration with explicit grants and RLS, Supabase SSR
-sessions, Google identity sign-in, a separate Drive OAuth flow with PKCE and
-signed state, encrypted Drive credentials, and safe revocation. Drive Picker,
-imports, functional playback, sync, offline storage, and the service worker
-remain later-phase work. Final desktop/mobile visual approval for Phase 1 also
-remains pending.
+Phases 0 and 1 are implemented, and the Phase 2-3 backend code is complete
+pending live-provider verification. The repository includes the responsive
+visual shell, RLS-backed Supabase sessions, separate secure Drive authorization,
+explicit-action Google Picker loading, server-side Drive validation, bounded
+ID3 metadata/chapter parsing, editable file grouping, duplicate handling, and a
+transactional import into the real library. Functional playback, sync, offline
+storage, and the service worker remain later-phase work. Final desktop/mobile
+visual approval for Phase 1 also remains pending.
 
 ## Architecture
 
@@ -94,15 +94,23 @@ must never be committed.
 | `/auth/drive/callback`          | Scope validation and encrypted credential persistence         |
 | `/app`                          | Continue listening and recent-book home                       |
 | `/app/onboarding`               | Drive connection and first-import preview                     |
+| `/app/import`                   | Picker selection, grouping review, and confirmed import       |
 | `/app/library`                  | Search/filter library shell and previewable collection states |
 | `/app/audiobooks/[audiobookId]` | Book detail, chapters, bookmarks, and expanded player shell   |
 | `/app/offline`                  | Device download and storage-management shell                  |
 | `/app/settings`                 | Playback, appearance, Drive, and account settings             |
 | `/health`                       | Unauthenticated, non-cached process health response           |
 
+Authenticated application APIs currently include
+`GET /api/v1/drive/picker-token`, `POST /api/v1/imports/preview`, and
+`POST /api/v1/imports`. Import confirmation never trusts Picker metadata from
+the browser; the server re-fetches every selected Drive file before calling the
+single-transaction database function.
+
 ## CI plan
 
-The initial pull-request workflow installs from the lockfile, checks formatting,
-lints, typechecks, builds, and audits production dependencies. Unit,
-integration, database, and browser test stages will be added with the features
-they verify, following the test plan in `IMPLEMENTATION_PLAN.md`.
+The pull-request workflow installs from the lockfile, checks formatting, lints,
+typechecks, runs unit tests, builds, and audits production dependencies. pgTAP
+database/RLS tests are versioned under `supabase/tests/database` and require a
+running local or hosted Supabase database. Browser tests remain a later-phase
+addition following `IMPLEMENTATION_PLAN.md`.
