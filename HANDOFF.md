@@ -8,48 +8,52 @@ The approved technical direction is a hybrid backend: Next.js owns application A
 
 ## Current State
 
-- Phase 0 is merged into `origin/main`. Active work is on local branch `feat/phase-1-visual-shell`; nothing from Phase 1 has been pushed.
+- Phase 0 is merged into `origin/main`. Active work is on local branch `feat/phase-1-visual-shell`; local Phase 1 and Phase 2 checkpoints have not been pushed.
 - This personal repository permits a normal direct push to `main` when the user explicitly asks to push or sync directly; pull requests remain the default for ambiguous requests, and force-pushing `main` remains prohibited.
 - Next.js 15.5.20, React 19.1.0, TypeScript 5.9.3, Tailwind CSS 4.3.1, Zod 4.4.3, and the Supabase CLI 2.109.1 are pinned with npm 11.6.1 and Node 24.
 - The Phase 1 responsive visual shell is implemented: landing, privacy, terms, auth error, application home, onboarding, library and collection states, audiobook detail, expanded player, offline management, settings, loading, error, and not-found surfaces.
 - Desktop uses persistent left navigation and a bottom player; mobile uses a compact header, mini-player, and bottom navigation. All content uses mock data with no backend dependency.
-- Strict TypeScript, ESLint, Prettier with Tailwind ordering, environment validation, security headers, design tokens, and a pull-request CI workflow are configured.
-- The local Supabase CLI layout exists and is intentionally not linked to a remote project.
-- Formatting, lint, strict typecheck, production build, production route smoke checks, expected unknown-book `404`, and production dependency audit pass. The build generates 21 pages and reports zero production vulnerabilities.
-- No authentication, database migrations, Google integration, functional audio playback, persistence, tests, or PWA service worker has been implemented.
+- Phase 2 implementation now includes a normalized Postgres migration and rollback, explicit grants, RLS, ownership constraints, indexes, account provisioning triggers, and pgTAP security tests.
+- Supabase Google identity sign-in uses SSR cookies and verified claims. Application routes are protected in middleware and again at the server layout boundary.
+- Google Drive authorization is a separate Next.js-owned OAuth flow using `drive.file`, PKCE, signed/user-bound/expiring state, exact scope validation, encrypted AES-256-GCM credential envelopes, and revoke-before-delete behavior.
+- Strict TypeScript, ESLint, Prettier with Tailwind ordering, Vitest, environment validation, security headers, design tokens, and a pull-request CI workflow are configured.
+- The local Supabase CLI layout exists and is intentionally not linked to a remote project. Docker and hosted Supabase/Google credentials are not available, so live auth, migration, RLS, and consent verification remain pending.
+- Formatting, lint, strict typecheck, 10 unit tests, production build, production route smoke checks, expected unknown-book `404`, source-size checks, and production dependency audit pass. The Phase 2 build generates 25 pages and reports zero production vulnerabilities.
+- Drive Picker/import, functional audio playback, sync, offline storage, and the PWA service worker are not implemented yet.
 - Phase 1 visual approval remains pending because the in-app browser was unavailable for desktop/mobile screenshots in this session.
 
 ## Last Action
 
-Reconciled local Git with merged `origin/main`, created `feat/phase-1-visual-shell`, and carried the project-specific Git policy checkpoint forward. Implemented the complete Phase 1 visual surface using the existing dependency set: expanded Tailwind design tokens and `next/font` typography, reusable application/marketing/library/player/state primitives, realistic mock audiobook data, every planned public and application route, responsive navigation/player chrome, accessibility semantics, and SEO routes. Updated `README.md` to reflect the new route and feature status.
+Implemented the Phase 2 database and authentication slice. Added the initial schema migration, rollback, pgTAP RLS/grant tests, Supabase SSR browser/server/admin clients, middleware protection, verified-claims identity handling, Google identity sign-in/callback/sign-out, and environment modes that preserve credential-free UI preview builds. Added a separate Drive authorization-code flow with PKCE and signed state, encrypted credential persistence, reconnect support, Google revocation, and live status surfaces in onboarding/settings.
 
-Ran `npm run verify`, live development and production route smoke checks, an expected unknown-audiobook `404` check, file-size checks, `git diff --check`, and `npm audit --omit=dev --audit-level=high`. The in-app browser could not be selected because no browser instance was available, so visual screenshot verification was not claimed.
+Ran ESLint, strict typecheck, 10 Vitest tests, the production build, source-size checks, `git diff --check`, and `npm audit --omit=dev`; all executable local gates pass. Database tests and provider flows could not be executed because Docker and real Supabase/Google configuration are unavailable. No live credentials were invented or committed.
 
 ## In Progress
 
-Phase 1 is implemented and its automated/runtime gates pass. Desktop/mobile visual review is still required before the Phase 1 exit gate can be marked fully approved. Development and production servers are stopped.
+Phase 2 code is implemented and local gates pass, but its live exit gate remains open until sign-in/session/sign-out, migration/RLS, Drive consent, and revocation can run against local or hosted services. Phase 3 Drive Picker/import is the next implementation slice. Phase 1 desktop/mobile visual review also remains open because the in-app browser is unavailable. Development and production servers are stopped.
 
 ## Pending
 
-1. Capture and review desktop/mobile screenshots when the in-app browser becomes available; correct any visual issues before closing the Phase 1 exit gate.
-2. Begin Phase 2 database/authentication work after loading the Supabase, auth, security, API-data, and testing rules.
-3. Install Docker Desktop or a compatible runtime before local Supabase migration/RLS verification; Docker remains unavailable on this machine.
-4. Configure Google identity and remote Supabase credentials without committing secrets when external project values are available.
-5. Add the planned test toolchain and tests with the features they verify, following `IMPLEMENTATION_PLAN.md`.
+1. Implement Phase 3 Google Picker and transactional import: explicit-action script loading, server-side file validation, review/grouping, duplicate handling, metadata correction, and library persistence.
+2. Install Docker Desktop or attach a hosted Supabase project, then run migrations, generated type output, pgTAP tests, and unauthorized-access checks.
+3. Configure Supabase Google identity and the separate Google Drive OAuth client without committing secrets; verify consent, reconnect, and revoke end to end.
+4. Capture and review desktop/mobile screenshots when the in-app browser becomes available; correct visual issues before closing the Phase 1 gate.
+5. Continue Phases 4-7 only through their planned, independently verified checkpoints.
 
 ## Known Issues
 
-- Docker is not installed, so `supabase start` and local database/auth container verification cannot run yet. `supabase init` and CLI 2.109.1 were verified.
+- Docker is not installed, so `supabase start`, migration execution, generated database types, pgTAP, and local auth/RLS verification cannot run yet. Supabase CLI 2.109.1 is installed and verified.
+- No hosted Supabase project or Google OAuth clients are configured, so real sign-in, session restoration, Drive consent, reconnect, and revocation remain unverified external flows.
 - The in-app browser reported no available browser instances, so Phase 1 desktop/mobile visual fidelity and interaction screenshots are not yet verified. Code-level responsive and accessibility rules were applied and automated gates pass.
-- The settings, filters, onboarding authorization, and player controls are intentionally visual/mock interactions in Phase 1; their functional behavior belongs to later phases.
+- Filters and player controls remain visual/mock interactions. Onboarding authorization and Drive disconnect are functional when the required external configuration is supplied.
 - OGG and some audiobook codecs are not uniformly supported across browsers; runtime capability detection remains required.
 - Final hosting must be validated for long-lived Range streaming, bandwidth, concurrency, and egress cost.
 - `IMPLEMENTATION_PLAN.md` is over the generic 500-line guideline after Markdown formatting; it remains one cohesive planning responsibility and was not split during Phase 0.
 
 ## Files Status
 
-- Created: Phase 0 foundation files plus `src/types/audiobook.ts`, `src/lib/mock/library.ts`, shared components under `src/components/{application,brand,library,marketing,player,settings,states,ui}/`, public routes under `src/app/(marketing)/{privacy,terms,auth/error}/`, application routes under `src/app/(application)/app/{library,onboarding,offline,settings,audiobooks/[audiobookId]}/`, application `loading.tsx` and `error.tsx`, root `not-found.tsx`, `robots.ts`, and `sitemap.ts`
-- Modified: `src/app/globals.css` (semantic light/dark design tokens), `src/app/layout.tsx` (editorial/interface fonts), marketing and application layouts/pages (production visual shells), `README.md` (Phase 1 status and routes), `HANDOFF.md` (this checkpoint), and local ignored agent rules (direct-`main` policy)
+- Created: Phase 1 visual files plus `supabase/migrations/20260715025503_initial_application_schema.sql`, its rollback and pgTAP test, Supabase clients under `src/lib/supabase/`, authentication under `src/features/auth/`, Drive security/integration modules under `src/features/drive/`, auth/Drive routes under `src/app/(marketing)/auth/`, `src/middleware.ts`, and `vitest.config.ts`
+- Modified: environment/package/Supabase configuration, protected application layout, onboarding/settings/marketing auth links, `README.md` (Phase 2 status and routes), `HANDOFF.md` (this checkpoint), and local ignored agent rules (direct-`main` policy)
 - Currently Being Edited: none
-- Planned to Edit: Phase 1 UI only if visual review finds issues; otherwise Phase 2 Supabase clients, migrations, auth routes/actions, middleware/session handling, environment schema, tests, README, and handoff
-- Untouched: package dependency versions, Supabase schema/migrations, Google credentials/integration, streaming APIs, service worker, and remote Git branches
+- Planned to Edit: Phase 3 Picker/import modules, import APIs/review UI, database migration/types/tests, README, and handoff; Phase 1 UI only if visual review finds issues
+- Untouched: real credentials, streaming APIs, functional player state, progress synchronization, offline databases, service worker, and remote Git branches

@@ -40,7 +40,7 @@ export default function LandingPage() {
             </div>
             <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
               <ActionLink
-                href="/app/onboarding"
+                href="/auth/sign-in?next=/app/onboarding"
                 icon={<Icon className="size-4" name="arrow-right" />}
               >
                 Connect Google Drive
@@ -69,7 +69,9 @@ export default function LandingPage() {
             Your personal listening library begins with the files you already
             own and the stories you already love.
           </p>
-          <ActionLink href="/app/onboarding">Connect Google Drive</ActionLink>
+          <ActionLink href="/auth/sign-in?next=/app/onboarding">
+            Connect Google Drive
+          </ActionLink>
         </section>
       </main>
       <MarketingFooter />

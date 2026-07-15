@@ -15,7 +15,9 @@ export default function MarketingHeader() {
         >
           How it works
         </a>
-        <ActionLink href="/app/onboarding">Connect Drive</ActionLink>
+        <ActionLink href="/auth/sign-in?next=/app/onboarding">
+          Sign in
+        </ActionLink>
       </nav>
     </header>
   );

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import BookCover from "@/components/library/BookCover";
 import ActionLink from "@/components/ui/ActionLink";
 import Icon from "@/components/ui/Icon";
+import { environment } from "@/lib/config/environment";
 import { MOCK_AUDIOBOOKS } from "@/lib/mock/library";
 
 export const metadata: Metadata = {
@@ -17,8 +18,27 @@ const ONBOARDING_STEPS = [
   { label: "Choose books", status: "upcoming" },
 ] as const;
 
-export default function OnboardingPage() {
+interface OnboardingPageProps {
+  searchParams: Promise<{ drive?: string }>;
+}
+
+const DRIVE_STATUS_MESSAGES: Record<string, string> = {
+  cancelled: "Drive authorization was cancelled. Nothing was imported.",
+  connected: "Google Drive is connected. You can now choose audiobook files.",
+  failed: "Drive could not be connected. Please try again.",
+  "invalid-state":
+    "That authorization attempt expired or could not be verified. Please retry.",
+  "scope-denied":
+    "The required file permission was not granted. No Drive access was saved.",
+  unavailable: "Google Drive integration is not configured on this server.",
+};
+
+export default async function OnboardingPage({
+  searchParams,
+}: OnboardingPageProps) {
+  const { drive } = await searchParams;
   const previewBook = MOCK_AUDIOBOOKS[1];
+  const isDriveEnabled = environment.driveIntegrationMode === "google";
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-10 py-8 sm:py-12">
@@ -61,6 +81,15 @@ export default function OnboardingPage() {
         })}
       </ol>
 
+      {drive && DRIVE_STATUS_MESSAGES[drive] ? (
+        <p
+          className="border-border bg-paper-elevated rounded-control border px-4 py-3 text-center text-sm"
+          role="status"
+        >
+          {DRIVE_STATUS_MESSAGES[drive]}
+        </p>
+      ) : null}
+
       <section className="border-border bg-paper-elevated shadow-card rounded-panel grid gap-8 border p-6 sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center">
         <div className="flex flex-col items-start gap-6">
           <span className="bg-action-soft text-action-strong grid size-14 place-items-center rounded-full">
@@ -90,12 +119,21 @@ export default function OnboardingPage() {
               Review detected books before anything enters your library
             </li>
           </ul>
-          <ActionLink href="/app/library">
-            Continue with Google Drive
+          <ActionLink
+            href={
+              isDriveEnabled
+                ? "/auth/drive/start?next=/app/onboarding"
+                : "/app/library"
+            }
+          >
+            {isDriveEnabled
+              ? "Continue with Google Drive"
+              : "Explore the UI preview"}
           </ActionLink>
           <p className="text-ink-muted text-xs">
-            Phase 1 preview: this button opens the mock library until secure
-            authorization is connected.
+            {isDriveEnabled
+              ? "You will be redirected to Google, then returned here."
+              : "Enable Google Drive server configuration to test real authorization."}
           </p>
         </div>
         {previewBook ? (

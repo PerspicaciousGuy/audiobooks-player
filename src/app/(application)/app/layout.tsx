@@ -1,11 +1,14 @@
 import AppShell from "@/components/application/AppShell";
+import { requireAuthenticatedIdentity } from "@/features/auth/session";
 
 interface ApplicationLayoutProps {
   children: React.ReactNode;
 }
 
-export default function ApplicationLayout({
+export default async function ApplicationLayout({
   children,
 }: ApplicationLayoutProps) {
-  return <AppShell>{children}</AppShell>;
+  const identity = await requireAuthenticatedIdentity("/app");
+
+  return <AppShell identity={identity}>{children}</AppShell>;
 }

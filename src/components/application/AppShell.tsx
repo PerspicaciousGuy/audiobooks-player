@@ -4,12 +4,17 @@ import ApplicationNavigation from "@/components/application/ApplicationNavigatio
 import BrandMark from "@/components/brand/BrandMark";
 import NowPlayingBar from "@/components/player/NowPlayingBar";
 import Icon from "@/components/ui/Icon";
+import { signOut } from "@/features/auth/actions";
+import type { AuthenticatedIdentity } from "@/features/auth/session";
 
 interface AppShellProps {
   children: ReactNode;
+  identity: AuthenticatedIdentity | undefined;
 }
 
-export default function AppShell({ children }: AppShellProps) {
+export default function AppShell({ children, identity }: AppShellProps) {
+  const accountLabel = identity?.email ?? "Private account";
+
   return (
     <div className="bg-paper text-ink min-h-screen">
       <a
@@ -27,20 +32,30 @@ export default function AppShell({ children }: AppShellProps) {
           <div className="bg-action-soft rounded-card flex flex-col gap-3 p-4">
             <span className="text-action-strong flex items-center gap-2 text-xs font-bold tracking-wider uppercase">
               <Icon className="size-4" name="cloud" />
-              Drive connected
+              Drive-ready library
             </span>
             <p className="text-ink-muted text-xs leading-relaxed">
-              Six books are available. Your audio remains in Google Drive.
+              Selected books appear here while source audio remains in Google
+              Drive.
             </p>
           </div>
           <div className="border-border flex items-center gap-3 border-t pt-4">
             <span className="bg-cover-plum text-paper-elevated grid size-10 place-items-center rounded-full text-sm font-bold">
               PG
             </span>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold">Your library</p>
-              <p className="text-ink-muted truncate text-xs">Private account</p>
+              <p className="text-ink-muted truncate text-xs">{accountLabel}</p>
             </div>
+            <form action={signOut}>
+              <button
+                aria-label="Sign out"
+                className="text-ink-muted hover:text-danger focus-visible:ring-focus rounded-control grid size-11 place-items-center focus-visible:ring-2 focus-visible:outline-none"
+                type="submit"
+              >
+                <Icon className="size-4 rotate-180" name="arrow-right" />
+              </button>
+            </form>
           </div>
         </div>
       </aside>

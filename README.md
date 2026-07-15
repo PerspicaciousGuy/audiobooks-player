@@ -7,13 +7,14 @@ storage, while synchronizing metadata, progress, bookmarks, and preferences.
 
 ## Current status
 
-Phase 0 is complete and the Phase 1 visual shell is implemented. The repository
-contains the responsive landing page, desktop and mobile application shells,
-mock home/library/book/player/offline/settings experiences, required UI states,
-design tokens, environment validation, a health endpoint, local Supabase CLI
-configuration, and CI quality checks. Authentication, Google Drive access,
-functional audio playback, persistence, and PWA behavior are not implemented
-yet. Final desktop/mobile visual approval for Phase 1 remains pending.
+Phases 0 and 1 are implemented, and the Phase 2 database/authentication code is
+complete pending live-provider verification. The repository includes the
+responsive visual shell, a migration with explicit grants and RLS, Supabase SSR
+sessions, Google identity sign-in, a separate Drive OAuth flow with PKCE and
+signed state, encrypted Drive credentials, and safe revocation. Drive Picker,
+imports, functional playback, sync, offline storage, and the service worker
+remain later-phase work. Final desktop/mobile visual approval for Phase 1 also
+remains pending.
 
 ## Architecture
 
@@ -52,19 +53,22 @@ Open `http://localhost:3000`. The operational health response is available at
 
 ## Commands
 
-| Command                   | Purpose                                          |
-| ------------------------- | ------------------------------------------------ |
-| `npm run dev`             | Start the Next.js development server             |
-| `npm run build`           | Create a production build                        |
-| `npm run start`           | Serve the production build                       |
-| `npm run format`          | Format tracked project files                     |
-| `npm run format:check`    | Check formatting without changing files          |
-| `npm run lint`            | Run ESLint                                       |
-| `npm run typecheck`       | Run the strict TypeScript compiler check         |
-| `npm run verify`          | Run formatting, linting, typechecking, and build |
-| `npm run supabase:start`  | Start the local Supabase stack with Docker       |
-| `npm run supabase:status` | Show local Supabase service status               |
-| `npm run supabase:stop`   | Stop the local Supabase stack                    |
+| Command                    | Purpose                                       |
+| -------------------------- | --------------------------------------------- |
+| `npm run dev`              | Start the Next.js development server          |
+| `npm run build`            | Create a production build                     |
+| `npm run start`            | Serve the production build                    |
+| `npm run format`           | Format tracked project files                  |
+| `npm run format:check`     | Check formatting without changing files       |
+| `npm run lint`             | Run ESLint                                    |
+| `npm run typecheck`        | Run the strict TypeScript compiler check      |
+| `npm run test`             | Run unit tests with Vitest                    |
+| `npm run test:coverage`    | Run unit tests with V8 coverage               |
+| `npm run verify`           | Run formatting, lint, types, tests, and build |
+| `npm run supabase:start`   | Start the local Supabase stack with Docker    |
+| `npm run supabase:status`  | Show local Supabase service status            |
+| `npm run supabase:stop`    | Stop the local Supabase stack                 |
+| `npm run supabase:test:db` | Run pgTAP database and RLS tests              |
 
 ## Environment configuration
 
@@ -72,8 +76,10 @@ Copy `.env.example` to `.env.local`. Only `NEXT_PUBLIC_` variables may enter the
 browser bundle. Supabase secret keys, database URLs, Google client secrets, and
 the Drive token-encryption key must remain server-only.
 
-No real credentials are required for Phases 0 and 1. They will be configured in
-their approved implementation phases and must never be committed.
+No real credentials are required in the default preview mode. Set the documented
+auth and Drive modes only after supplying every corresponding server value. The
+Drive encryption key must be a canonical base64-encoded 32-byte key. Secrets
+must never be committed.
 
 ## Routes
 
@@ -82,6 +88,10 @@ their approved implementation phases and must never be committed.
 | `/`                             | Responsive public landing page                                |
 | `/privacy`, `/terms`            | Privacy model and terms previews                              |
 | `/auth/error`                   | Safe authentication failure state                             |
+| `/auth/sign-in`                 | Preview or Supabase Google identity sign-in                   |
+| `/auth/callback`                | Supabase PKCE session exchange                                |
+| `/auth/drive/start`             | User-bound Google Drive authorization start                   |
+| `/auth/drive/callback`          | Scope validation and encrypted credential persistence         |
 | `/app`                          | Continue listening and recent-book home                       |
 | `/app/onboarding`               | Drive connection and first-import preview                     |
 | `/app/library`                  | Search/filter library shell and previewable collection states |
