@@ -19,7 +19,9 @@ export const audiobookRowSchema = z.object({
 
 export const audiobookFileRowSchema = z.object({
   audiobook_id: z.string().uuid(),
+  byte_size: z.coerce.number().int().positive(),
   duration_ms: z.number().nullable(),
+  drive_version: z.string().nullable(),
   file_name: z.string(),
   id: z.string().uuid(),
   mime_type: z.string(),
@@ -141,6 +143,8 @@ export function mapAudiobook(
   const sources: AudioSource[] = files
     .toSorted((left, right) => left.sequence - right.sequence)
     .map((file) => ({
+      byteSize: file.byte_size,
+      driveVersion: file.drive_version,
       durationMs: file.duration_ms,
       id: file.id,
       mimeType: file.mime_type,

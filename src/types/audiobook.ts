@@ -12,6 +12,8 @@ export interface Chapter {
 }
 
 export interface AudioSource {
+  byteSize: number;
+  driveVersion: string | null;
   durationMs: number | null;
   id: string;
   mimeType: string;

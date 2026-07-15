@@ -7,8 +7,8 @@ storage, while synchronizing metadata, progress, bookmarks, and preferences.
 
 ## Current status
 
-Phases 0 and 1 are implemented, and the Phase 2-5 application code is complete
-pending live-provider verification. The repository includes the responsive
+Phases 0, 1, and 6 are implemented, and the Phase 2-5 application code is
+complete pending live-provider verification. The repository includes the responsive
 visual shell, RLS-backed Supabase sessions, separate secure Drive authorization,
 explicit-action Google Picker loading, server-side Drive validation, bounded
 ID3 metadata/chapter parsing, editable file grouping, duplicate handling, and a
@@ -16,9 +16,12 @@ transactional import into the real library. The shared player uses one audio
 element, an authenticated bounded-Range proxy, multi-file continuation, chapter
 jumps, Media Session, rate, volume, and sleep controls. Versioned progress uses
 atomic stale-write rejection and a bounded device retry queue; resume,
-completion, and bookmark add/delete are integrated into the player. Offline
-audio storage and the service worker remain later-phase work. Final
-desktop/mobile visual approval for Phase 1 also remains pending.
+completion, and bookmark add/delete are integrated into the player. The
+installable PWA adds an update-aware service worker, a branded offline shell,
+explicit OPFS/Cache Storage downloads indexed with Dexie, storage accounting,
+partial/evicted-file reconciliation, and offline multi-file playback. Final
+airplane-mode and desktop/mobile visual approval remain pending in a supported
+browser.
 
 ## Architecture
 
@@ -101,7 +104,8 @@ must never be committed.
 | `/app/import`                   | Picker selection, grouping review, and confirmed import       |
 | `/app/library`                  | Search/filter library shell and previewable collection states |
 | `/app/audiobooks/[audiobookId]` | Book detail, chapters, bookmarks, and expanded player shell   |
-| `/app/offline`                  | Device download and storage-management shell                  |
+| `/app/offline`                  | Device downloads, offline playback, and storage management    |
+| `/offline`                      | Public branded offline fallback and device-library access     |
 | `/app/settings`                 | Playback, appearance, Drive, and account settings             |
 | `/health`                       | Unauthenticated, non-cached process health response           |
 
@@ -113,6 +117,12 @@ confirmation never trusts Picker metadata from the browser; the server
 re-fetches every selected Drive file before calling the single-transaction
 database function. Streaming forwards one capped Range and pipes the Drive body
 without buffering the audiobook in application memory.
+
+Completed offline downloads use the separate authenticated
+`GET /api/v1/audiobooks/[audiobookId]/download?fileId=...` endpoint. The
+service worker deliberately excludes authenticated application pages, APIs,
+Range traffic, and audio responses from its caches; audio is stored only after
+an explicit device-download action.
 
 Playback persistence uses
 `PUT /api/v1/audiobooks/[audiobookId]/progress`,

@@ -57,3 +57,47 @@ export async function openDriveRangeStream(
 
   return response;
 }
+
+async function requestDriveDownload(
+  file: OwnedStreamFile,
+  accessToken: string,
+  requestSignal: AbortSignal,
+): Promise<Response> {
+  const timeoutController = new AbortController();
+  const timeout = setTimeout(() => timeoutController.abort(), 15_000);
+
+  try {
+    return await fetch(mediaUrl(file.driveFileId), {
+      cache: "no-store",
+      headers: { authorization: `Bearer ${accessToken}` },
+      signal: AbortSignal.any([requestSignal, timeoutController.signal]),
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+export async function openDriveDownloadStream(
+  userId: string,
+  file: OwnedStreamFile,
+  requestSignal: AbortSignal,
+): Promise<Response> {
+  let credentials = await getValidDriveCredentials(userId);
+  let response = await requestDriveDownload(
+    file,
+    credentials.accessToken,
+    requestSignal,
+  );
+
+  if (response.status === 401) {
+    await response.body?.cancel();
+    credentials = await getValidDriveCredentials(userId, true);
+    response = await requestDriveDownload(
+      file,
+      credentials.accessToken,
+      requestSignal,
+    );
+  }
+
+  return response;
+}

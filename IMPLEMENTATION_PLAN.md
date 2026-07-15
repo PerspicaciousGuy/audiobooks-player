@@ -454,7 +454,7 @@ Exit gate: long files start quickly, seek correctly, transition chapters/files, 
 
 Exit gate: playback resumes consistently without older checkpoints overwriting newer progress.
 
-### Phase 6 — PWA and offline playback
+### Phase 6 — PWA and offline playback (implementation completed 2026-07-15)
 
 - Add manifest, icons, service worker, install UX, safe app-shell caching, and offline route.
 - Implement capability/storage checks and device-local audio downloads.
@@ -462,6 +462,15 @@ Exit gate: playback resumes consistently without older checkpoints overwriting n
 - Reconcile eviction, partial files, source updates, and manual deletion.
 
 Exit gate: the app installs and a completed download plays in airplane/offline conditions on supported browsers.
+
+Implementation checkpoint: manifest, code-native icons, install/update UX,
+safe service-worker caching, a public offline shell, authenticated full-file
+downloads, OPFS with Cache Storage fallback, Dexie metadata, storage/quota
+feedback, partial/eviction/source-version reconciliation, manual removal, and
+offline multi-file playback are implemented. The automated gate and production
+HTTP smoke tests pass; the install and airplane-mode portions of the exit gate
+remain pending until a supported browser and real imported Drive audio are
+available.
 
 ### Phase 7 — Hardening and release readiness
 

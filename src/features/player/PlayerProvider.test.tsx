@@ -12,6 +12,10 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn() }),
 }));
 
+vi.mock("@/features/offline/downloads", () => ({
+  resolveOfflineSourceUrl: vi.fn().mockResolvedValue(undefined),
+}));
+
 const AUDIOBOOK: Audiobook = {
   author: "Ursula K. Le Guin",
   bookmarks: [],
@@ -29,6 +33,8 @@ const AUDIOBOOK: Audiobook = {
   progressPercent: 0,
   sources: [
     {
+      byteSize: 1024,
+      driveVersion: "1",
       durationMs: null,
       id: "20000000-0000-0000-0000-000000000002",
       mimeType: "audio/mpeg",
@@ -72,8 +78,10 @@ describe("PlayerProvider", () => {
     });
     const audioElements = container.querySelectorAll("audio");
     expect(audioElements).toHaveLength(1);
-    expect(audioElements[0]?.src).toContain(
-      "/api/v1/audiobooks/10000000-0000-0000-0000-000000000001/stream?fileId=20000000-0000-0000-0000-000000000002",
-    );
+    await waitFor(() => {
+      expect(audioElements[0]?.src).toContain(
+        "/api/v1/audiobooks/10000000-0000-0000-0000-000000000001/stream?fileId=20000000-0000-0000-0000-000000000002",
+      );
+    });
   });
 });

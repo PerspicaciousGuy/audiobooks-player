@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import BookCover from "@/components/library/BookCover";
+import OfflineDownloadButton from "@/components/offline/OfflineDownloadButton";
 import BookmarkList from "@/components/player/BookmarkList";
 import ChapterList from "@/components/player/ChapterList";
 import ExpandedPlayer from "@/components/player/ExpandedPlayer";
@@ -89,10 +90,7 @@ export default async function AudiobookPage({ params }: AudiobookPageProps) {
                 ? "Continue listening"
                 : "Start listening"}
             </ActionLink>
-            <ActionLink href="/app/offline" variant="secondary">
-              <Icon className="size-4" name="download" />
-              {audiobook.isDownloaded ? "Downloaded" : "Download"}
-            </ActionLink>
+            <OfflineDownloadButton audiobook={audiobook} />
           </div>
         </div>
       </section>

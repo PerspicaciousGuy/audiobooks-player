@@ -33,7 +33,9 @@ export async function getOwnedAudiobooks(): Promise<Audiobook[] | undefined> {
   const [filesResult, progressResult] = await Promise.all([
     supabase
       .from("audiobook_files")
-      .select("id, audiobook_id, file_name, mime_type, duration_ms, sequence")
+      .select(
+        "id, audiobook_id, file_name, mime_type, byte_size, drive_version, duration_ms, sequence",
+      )
       .in("audiobook_id", bookIds),
     supabase
       .from("playback_progress")
@@ -79,7 +81,7 @@ export const getOwnedAudiobook = cache(
         supabase
           .from("audiobook_files")
           .select(
-            "id, audiobook_id, file_name, mime_type, duration_ms, sequence",
+            "id, audiobook_id, file_name, mime_type, byte_size, drive_version, duration_ms, sequence",
           )
           .eq("audiobook_id", audiobookId),
         supabase

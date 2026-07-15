@@ -10,6 +10,7 @@ import {
 
 import { useProgressSync } from "@/features/progress/useProgressSync";
 import { useBookmarkActions } from "@/features/bookmarks/useBookmarkActions";
+import { resolveOfflineSourceUrl } from "@/features/offline/downloads";
 import type { Audiobook } from "@/types/audiobook";
 
 import PlayerAudio from "./PlayerAudio";
@@ -59,11 +60,28 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
     const audio = audioRef.current;
 
     if (!audio || !audiobook || !source) return;
-    audio.src = `/api/v1/audiobooks/${audiobook.id}/stream?fileId=${source.id}`;
-    audio.load();
-    setCurrentTime(0);
-    setDuration(0);
-    setError(undefined);
+    let isCancelled = false;
+    let offlineUrl: string | undefined;
+    void resolveOfflineSourceUrl(source)
+      .catch(() => undefined)
+      .then((resolvedUrl) => {
+        if (isCancelled) {
+          if (resolvedUrl) URL.revokeObjectURL(resolvedUrl);
+          return;
+        }
+        offlineUrl = resolvedUrl;
+        audio.src =
+          resolvedUrl ??
+          `/api/v1/audiobooks/${audiobook.id}/stream?fileId=${source.id}`;
+        audio.load();
+        setCurrentTime(0);
+        setDuration(0);
+        setError(undefined);
+      });
+    return () => {
+      isCancelled = true;
+      if (offlineUrl) URL.revokeObjectURL(offlineUrl);
+    };
   }, [audiobook, source]);
 
   const seek = useCallback((seconds: number) => {
