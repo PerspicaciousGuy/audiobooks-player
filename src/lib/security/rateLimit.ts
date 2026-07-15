@@ -19,6 +19,7 @@ export type RateLimitBucket =
   | "import_preview"
   | "library_read"
   | "picker_token"
+  | "preferences_update"
   | "progress"
   | "stream";
 

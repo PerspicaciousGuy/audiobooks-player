@@ -1,16 +1,10 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useRef, useState, type ReactNode } from "react";
 
 import { useProgressSync } from "@/features/progress/useProgressSync";
 import { useBookmarkActions } from "@/features/bookmarks/useBookmarkActions";
-import { resolveOfflineSourceUrl } from "@/features/offline/downloads";
+import type { UserPreferences } from "@/features/preferences/contracts";
 import type { Audiobook } from "@/types/audiobook";
 
 import PlayerAudio from "./PlayerAudio";
@@ -18,14 +12,24 @@ import {
   PlayerContext,
   PLAYBACK_RATES,
   SLEEP_MODES,
+  defaultSleepMode,
   type PlayerContextValue,
   type SleepMode,
 } from "./context";
 import { useMediaSession } from "./useMediaSession";
+import { useAudioSource } from "./useAudioSource";
 import { useSleepTimer } from "./useSleepTimer";
 import { useSourceSelection } from "./useSourceSelection";
 
-export default function PlayerProvider({ children }: { children: ReactNode }) {
+interface PlayerProviderProps {
+  children: ReactNode;
+  preferences: UserPreferences;
+}
+
+export default function PlayerProvider({
+  children,
+  preferences,
+}: PlayerProviderProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const pendingSeekRef = useRef(0);
   const shouldAutoplayRef = useRef(false);
@@ -34,7 +38,9 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackRate, setPlaybackRate] = useState(1);
+  const [playbackRate, setPlaybackRate] = useState(
+    preferences.defaultPlaybackRate,
+  );
   const [volume, setVolumeState] = useState(1);
   const [sleepMode, setSleepMode] = useState<SleepMode>("off");
   const [error, setError] = useState<string>();
@@ -53,36 +59,22 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
     sourceId: source?.id,
   });
 
-  useMediaSession(audiobook, audioRef);
+  useMediaSession(
+    audiobook,
+    audioRef,
+    preferences.skipBackSeconds,
+    preferences.skipForwardSeconds,
+  );
   useSleepTimer(audioRef, sleepMode, setSleepMode);
 
-  useEffect(() => {
-    const audio = audioRef.current;
-
-    if (!audio || !audiobook || !source) return;
-    let isCancelled = false;
-    let offlineUrl: string | undefined;
-    void resolveOfflineSourceUrl(source)
-      .catch(() => undefined)
-      .then((resolvedUrl) => {
-        if (isCancelled) {
-          if (resolvedUrl) URL.revokeObjectURL(resolvedUrl);
-          return;
-        }
-        offlineUrl = resolvedUrl;
-        audio.src =
-          resolvedUrl ??
-          `/api/v1/audiobooks/${audiobook.id}/stream?fileId=${source.id}`;
-        audio.load();
-        setCurrentTime(0);
-        setDuration(0);
-        setError(undefined);
-      });
-    return () => {
-      isCancelled = true;
-      if (offlineUrl) URL.revokeObjectURL(offlineUrl);
-    };
-  }, [audiobook, source]);
+  useAudioSource({
+    audioRef,
+    audiobook,
+    setCurrentTime,
+    setDuration,
+    setError,
+    source,
+  });
 
   const seek = useCallback((seconds: number) => {
     const audio = audioRef.current;
@@ -111,6 +103,7 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
     useSourceSelection({
       audioRef,
       audiobook,
+      defaultPlaybackRate: preferences.defaultPlaybackRate,
       pendingSeekRef,
       setAudiobook,
       setError,
@@ -143,6 +136,9 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
     isPlaying,
     playAudiobook: (nextAudiobook) => {
       void saveCheckpoint();
+      if (audiobook?.id !== nextAudiobook.id) {
+        setSleepMode(defaultSleepMode(preferences.defaultSleepTimerMinutes));
+      }
       selectAudiobook(nextAudiobook);
     },
     playChapter: (nextAudiobook, chapter) => {
@@ -156,6 +152,8 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
       if (audioRef.current) audioRef.current.volume = normalized;
       setVolumeState(normalized);
     },
+    skipBackSeconds: preferences.skipBackSeconds,
+    skipForwardSeconds: preferences.skipForwardSeconds,
     skip,
     sleepMode,
     togglePlayback: () => {

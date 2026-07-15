@@ -89,6 +89,19 @@
     --color-action-soft: oklch(0.31 0.045 65);
   }
 
+  @media (prefers-color-scheme: dark) {
+    [data-theme="system"] {
+      --color-paper: var(--color-paper-dark);
+      --color-paper-elevated: var(--color-paper-elevated-dark);
+      --color-ink: var(--color-ink-dark);
+      --color-ink-muted: var(--color-ink-muted-dark);
+      --color-border: var(--color-border-dark);
+      --color-surface-muted: oklch(0.27 0.014 70);
+      --color-player: oklch(0.23 0.014 70);
+      --color-action-soft: oklch(0.31 0.045 65);
+    }
+  }
+
   :focus-visible {
     outline: 2px solid var(--color-focus);
     outline-offset: 3px;
@@ -97,5 +110,16 @@
   ::selection {
     background: var(--color-action);
     color: var(--color-paper-elevated);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

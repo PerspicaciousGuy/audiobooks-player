@@ -14,6 +14,7 @@ export default function OfflinePage() {
       <SectionHeading
         description="Completed downloads stay on this browser profile and can be removed at any time. Source files remain unchanged in Drive."
         eyebrow="Device storage"
+        level={1}
         title="Listen beyond the signal"
       />
       <OfflineLibraryManager />

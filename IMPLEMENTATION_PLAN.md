@@ -146,6 +146,7 @@ Architectural rules:
 | `PUT /api/v1/audiobooks/[audiobookId]/progress`   | Idempotent playback checkpoint update                              |
 | `POST /api/v1/audiobooks/[audiobookId]/bookmarks` | Create a bookmark                                                  |
 | `DELETE /api/v1/bookmarks/[bookmarkId]`           | Delete an owned bookmark                                           |
+| `PATCH /api/v1/preferences`                       | Validate and persist playback and appearance defaults              |
 | `DELETE /api/v1/account`                          | Revoke Drive and delete owned application data                     |
 
 Supabase Auth callback/session routes remain framework-controlled and are not treated as public application API resources. Drive disconnection is a protected server action because it terminates in a UI redirect.
@@ -408,7 +409,7 @@ Each phase ends in a working checkpoint. Tests are planned as explicit verificat
 
 Exit gate: passed with a clean install, formatting check, lint, strict typecheck, production build, dependency audit, and live `/health` response.
 
-### Phase 1 — Responsive visual shell
+### Phase 1 — Responsive visual shell (completed 2026-07-15)
 
 - Implement design tokens and shared primitives.
 - Build the landing page from the approved mockup.
@@ -417,6 +418,13 @@ Exit gate: passed with a clean install, formatting check, lint, strict typecheck
 - Add accessibility semantics, focus order, keyboard support, reduced motion, and responsive validation.
 
 Exit gate: approved visual fidelity at desktop and mobile widths with no backend dependency.
+
+Implementation checkpoint: the landing, home, library, detail/player, offline,
+settings, onboarding, import, legal, and fallback routes pass rendered audits at
+390x844 and 1440x900 with no horizontal overflow. Search, progress/download/
+finished filters, mobile account navigation, keyboard skip-link behavior,
+responsive headings, reduced motion, theme selection, metadata editing, and
+account-backed playback preferences are implemented and component-tested.
 
 ### Phase 2 — Database and authentication
 
@@ -562,7 +570,8 @@ validation against real infrastructure:
    provider flows using disposable test data.
 4. Run the deployment checklist with representative long files and two
    authenticated sessions.
-5. Approve desktop/mobile visuals and PWA install, update, eviction, and
-   airplane-mode playback on representative browsers and devices.
+5. Reconfirm the already-passing desktop/mobile visual audit on representative
+   devices, then prove PWA install, update, eviction, and airplane-mode playback
+   with a real imported book.
 6. Promote the exact validated commit and migration set only after every release
    gate is recorded as passing.

@@ -7,23 +7,28 @@ storage, while synchronizing metadata, progress, bookmarks, and preferences.
 
 ## Current status
 
-Phases 0, 1, 6, and the local Phase 7 hardening work are implemented. Phase 2-5
-application code is complete pending live-provider verification. The repository
-includes the responsive visual shell, RLS-backed Supabase sessions, separate secure Drive authorization,
-explicit-action Google Picker loading, server-side Drive validation, bounded
-ID3 metadata/chapter parsing, editable file grouping, duplicate handling, and a
-transactional import into the real library. The shared player uses one audio
-element, an authenticated bounded-Range proxy, multi-file continuation, chapter
-jumps, Media Session, rate, volume, and sleep controls. Versioned progress uses
-atomic stale-write rejection and a bounded device retry queue; resume,
-completion, and bookmark add/delete are integrated into the player. The
-installable PWA adds an update-aware service worker, a branded offline shell,
-explicit OPFS/Cache Storage downloads indexed with Dexie, storage accounting,
-partial/evicted-file reconciliation, and offline multi-file playback. Final
-airplane-mode and desktop/mobile visual approval remain pending in a supported
-browser. Release hardening adds account deletion, origin enforcement, private
-database-backed quotas, CSP/HSTS, redacted structured events, accessibility
-checks, complete versioned library APIs, and deployment/incident/OAuth guides.
+Phases 0 and 1, the local Phase 6 implementation, and the local Phase 7
+hardening work are complete. Phase 2-5 application code is complete pending
+live-provider verification. The repository includes the responsive visual
+shell, real library search and filters, a mobile account menu, synced playback
+and theme preferences, editable book metadata, RLS-backed Supabase sessions,
+separate secure Drive authorization, explicit-action Google Picker loading,
+server-side Drive validation, bounded ID3 metadata/chapter parsing, editable
+file grouping, duplicate handling, and a transactional import into the real
+library. The shared player uses one audio element, an authenticated
+bounded-Range proxy, multi-file continuation, chapter jumps, Media Session,
+account-defined skip/rate defaults, volume, and sleep controls. Versioned
+progress uses atomic stale-write rejection and a bounded device retry queue;
+resume, completion, and bookmark add/delete are integrated into the player.
+The installable PWA adds an update-aware service worker, a branded offline
+shell, explicit OPFS/Cache Storage downloads indexed with Dexie, storage
+accounting, partial/evicted-file reconciliation, and offline multi-file
+playback. Desktop and exact 390x844 mobile browser audits pass without
+horizontal overflow; representative-device install and airplane-mode playback
+remain release gates. Release hardening adds account deletion, origin
+enforcement, private database-backed quotas, CSP/HSTS, redacted structured
+events, accessibility checks, complete versioned library APIs, and
+deployment/incident/OAuth guides.
 
 ## Architecture
 
@@ -113,6 +118,7 @@ must never be committed.
 
 Authenticated application APIs currently include
 `GET /api/v1/library`, `GET/PATCH /api/v1/audiobooks/[audiobookId]`,
+`PATCH /api/v1/preferences`,
 `GET /api/v1/drive/picker-token`, `POST /api/v1/imports/preview`, and
 `POST /api/v1/imports`, plus the owned-file-only
 `GET /api/v1/audiobooks/[audiobookId]/stream?fileId=...` endpoint. Import
@@ -139,7 +145,9 @@ deletes source files from Google Drive.
 ## CI plan
 
 The main-branch and pull-request workflow installs from the lockfile, checks
-formatting, lints, typechecks, runs unit tests, builds, and audits production dependencies. pgTAP
-database/RLS tests are versioned under `supabase/tests/database` and require a
-running local or hosted Supabase database. Browser tests remain a later-phase
-addition following `IMPLEMENTATION_PLAN.md`.
+formatting, lints, typechecks, runs unit tests, builds, and audits production
+dependencies. pgTAP database/RLS tests are versioned under
+`supabase/tests/database` and require a running local or hosted Supabase
+database. The local release audit covers rendered mobile/desktop routes and
+critical interactions through Chrome DevTools; repeatable Playwright journeys
+remain part of provider-backed staging validation.

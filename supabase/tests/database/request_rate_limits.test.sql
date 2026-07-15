@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(8);
+select plan(9);
 
 insert into auth.users (
   instance_id,
@@ -92,6 +92,11 @@ select set_config(
 select ok(
   (public.consume_request_quota('account_delete')->>'allowed')::boolean,
   'a request inside the fixed quota is accepted'
+);
+
+select ok(
+  (public.consume_request_quota('preferences_update')->>'allowed')::boolean,
+  'preference updates use a fixed server quota'
 );
 
 do $$

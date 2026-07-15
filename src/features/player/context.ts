@@ -8,6 +8,10 @@ export const PLAYBACK_RATES = [0.75, 1, 1.25, 1.5, 1.75, 2] as const;
 export type SleepMode = "off" | "15" | "30" | "60" | "chapter";
 export const SLEEP_MODES: SleepMode[] = ["off", "15", "30", "60", "chapter"];
 
+export function defaultSleepMode(minutes: number | null): SleepMode {
+  return minutes ? (String(minutes) as SleepMode) : "off";
+}
+
 export interface PlayerContextValue {
   addBookmark: () => Promise<void>;
   audiobook?: Audiobook;
@@ -24,6 +28,8 @@ export interface PlayerContextValue {
   playbackRate: number;
   seek: (seconds: number) => void;
   setVolume: (volume: number) => void;
+  skipBackSeconds: number;
+  skipForwardSeconds: number;
   skip: (seconds: number) => void;
   sleepMode: SleepMode;
   togglePlayback: () => void;

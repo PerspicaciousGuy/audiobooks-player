@@ -7,6 +7,8 @@ import type { Audiobook } from "@/types/audiobook";
 export function useMediaSession(
   audiobook: Audiobook | undefined,
   audioRef: RefObject<HTMLAudioElement | null>,
+  skipBackSeconds: number,
+  skipForwardSeconds: number,
 ): void {
   useEffect(() => {
     if (!("mediaSession" in navigator) || !audiobook) return;
@@ -26,7 +28,7 @@ export function useMediaSession(
       if (audio) {
         audio.currentTime = Math.max(
           0,
-          audio.currentTime - (details.seekOffset ?? 15),
+          audio.currentTime - (details.seekOffset ?? skipBackSeconds),
         );
       }
     });
@@ -35,7 +37,7 @@ export function useMediaSession(
       if (audio) {
         audio.currentTime = Math.min(
           audio.duration,
-          audio.currentTime + (details.seekOffset ?? 30),
+          audio.currentTime + (details.seekOffset ?? skipForwardSeconds),
         );
       }
     });
@@ -49,5 +51,5 @@ export function useMediaSession(
         );
       });
     };
-  }, [audioRef, audiobook]);
+  }, [audioRef, audiobook, skipBackSeconds, skipForwardSeconds]);
 }

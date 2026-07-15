@@ -72,10 +72,10 @@ export default function ExpandedPlayer({ audiobook }: ExpandedPlayerProps) {
         </div>
         <div className="flex items-center justify-center gap-2 sm:gap-5">
           <button
-            aria-label="Rewind 15 seconds"
+            aria-label={`Rewind ${player.skipBackSeconds} seconds`}
             className="hover:bg-paper-elevated/10 focus-visible:ring-action grid size-11 place-items-center rounded-full focus-visible:ring-2 focus-visible:outline-none disabled:opacity-40"
             disabled={!isActive}
-            onClick={() => player.skip(-15)}
+            onClick={() => player.skip(-player.skipBackSeconds)}
             type="button"
           >
             <Icon className="size-5" name="rewind" />
@@ -97,10 +97,10 @@ export default function ExpandedPlayer({ audiobook }: ExpandedPlayerProps) {
             />
           </button>
           <button
-            aria-label="Forward 30 seconds"
+            aria-label={`Forward ${player.skipForwardSeconds} seconds`}
             className="hover:bg-paper-elevated/10 focus-visible:ring-action grid size-11 place-items-center rounded-full focus-visible:ring-2 focus-visible:outline-none disabled:opacity-40"
             disabled={!isActive}
-            onClick={() => player.skip(30)}
+            onClick={() => player.skip(player.skipForwardSeconds)}
             type="button"
           >
             <Icon className="size-5 rotate-180" name="rewind" />

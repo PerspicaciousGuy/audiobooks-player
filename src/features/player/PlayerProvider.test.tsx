@@ -4,6 +4,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { Audiobook } from "@/types/audiobook";
+import { DEFAULT_USER_PREFERENCES } from "@/features/preferences/contracts";
 
 import { usePlayer } from "./context";
 import PlayerProvider from "./PlayerProvider";
@@ -64,7 +65,7 @@ describe("PlayerProvider", () => {
     vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue();
 
     const { container } = render(
-      <PlayerProvider>
+      <PlayerProvider preferences={DEFAULT_USER_PREFERENCES}>
         <PlayerProbe />
       </PlayerProvider>,
     );

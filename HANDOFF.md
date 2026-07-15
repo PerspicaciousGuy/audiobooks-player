@@ -17,7 +17,10 @@ user's browser profile.
 - Direct pushes to `main` are permitted only when the user explicitly asks to
   push or sync directly. Force-pushing `main` is prohibited.
 - Phase 1 provides the responsive warm-editorial landing and application UI for
-  desktop and mobile, including principal empty/loading/error states.
+  desktop and mobile, including principal empty/loading/error states, live
+  library search/filters, mobile account navigation, editable book details,
+  account-backed preferences, theme selection, and keyboard/reduced-motion
+  accessibility behavior.
 - Phase 2 provides Supabase SSR authentication, normalized/RLS-protected data,
   and a separate user-bound Drive OAuth flow with PKCE, exact scopes, encrypted
   credentials, reconnect, and revoke-before-delete.
@@ -37,36 +40,43 @@ user's browser profile.
   deletion with Drive revocation and Auth/database cascade, same-origin mutation
   checks, private atomic Postgres quotas, CSP/HSTS/cross-origin headers,
   allowlisted JSON events, redaction and accessibility tests, expanded legal
-  content, a security policy, and deployment/OAuth/incident guides.
+  content, a security policy, and deployment/OAuth/incident guides. Preference
+  writes use the same authenticated, same-origin, validated, and rate-limited
+  API boundary.
 - CI runs quality, tests, build, and production audit for pull requests and
   direct pushes to `main`. A separate clean Supabase job applies migrations and
   runs all pgTAP/RLS tests.
 
 ## Last Action
 
-Completed the local Phase 7 hardening checkpoint and final design-to-code audit.
-Closed the remaining documented internal API gap with owned cursor pagination,
-book details, and bounded metadata corrections. Added a private per-user quota
-table and security-definer function with fixed server limits; all protected APIs
-now fail closed if quota enforcement is unavailable. Mutations require the exact
-configured origin.
+Completed the local usability, accessibility, and responsive-browser closure
+pass. The library now searches title/author/narrator and filters all,
+in-progress, device-downloaded, and finished books. Mobile account navigation
+exposes Settings and Sign out. Settings persist validated playback rate, skip
+intervals, default sleep timer, and theme through a protected preference API;
+the player and Media Session consume those defaults. Owned book details can be
+corrected through the existing bounded metadata API.
 
-Added the confirmed account-deletion flow: the user must type `DELETE`, Google
-Drive is revoked first, the local session is closed, the Supabase Auth user and
-cascade-owned metadata are deleted, browser storage/cache clearing is requested,
-and original Drive files are never deleted. Operational events expose only
-allowlisted non-content fields.
+Fixed the skip link so it is visually hidden until focused, gave settings and
+offline pages proper level-one headings, and added system/dark theme plus global
+reduced-motion behavior. The exact 390x844 and 1440x900 Chrome DevTools audit
+covered landing, application, library, book, offline, settings, onboarding,
+import, legal, and offline-fallback routes with no horizontal overflow. Search,
+finished filtering, the mobile account menu, theme switching, and skip-link
+focus were exercised in the rendered production app.
 
 ## Verification
 
-- `npm run verify`: passed formatting, ESLint, strict TypeScript, 35 tests in 14
-  files, and the 27-route production build.
-- `npm run test:coverage`: passed; current measured coverage is 60.64% statements,
-  51.08% branches, 54.46% functions, and 62.91% lines.
-- `npm audit --omit=dev`: zero vulnerabilities.
+- Formatting, ESLint, strict TypeScript, 45 tests in 18 files, and the 28-route
+  production build pass.
+- `npm run test:coverage`: passed; current measured coverage is 65.23%
+  statements, 54.11% branches, 61.58% functions, and 67.61% lines.
+- `npm audit --audit-level=high`: zero vulnerabilities.
 - Production HTTP smoke: public/legal/PWA resources return `200`; protected new
   APIs return `401` anonymously; CSP, one-year HSTS, COOP, CORP, content-type,
-  referrer, and permissions headers are present.
+  referrer, and permissions headers are present. The manifest and service worker
+  are served successfully, with authenticated/Range/audio caching excluded by
+  design.
 - Repository audit: `git diff --check` passes, no TS/TSX file exceeds 200 lines,
   and no API-key, private-key, or JWT-shaped secret was found.
 - Development and production servers are stopped.
@@ -88,9 +98,9 @@ following checks run against real infrastructure:
    timeout, bandwidth, and egress behavior.
 5. Use two authenticated sessions to prove stale-write rejection, progress
    restoration, and bookmark isolation.
-6. In representative desktop/mobile browsers, approve the visuals and prove PWA
-   install, update, partial cleanup, quota failure, eviction, source changes,
-   and airplane-mode multi-file playback.
+6. Reconfirm the passing local visuals on representative physical devices and
+   prove PWA install, update, partial cleanup, quota failure, eviction, source
+   changes, and airplane-mode multi-file playback.
 
 Follow `docs/DEPLOYMENT.md` for the release order,
 `docs/GOOGLE_OAUTH_VERIFICATION.md` for Google setup/evidence, and
@@ -100,9 +110,10 @@ Follow `docs/DEPLOYMENT.md` for the release order,
 
 - No Docker, hosted Supabase project, Google OAuth clients, production domain,
   or deploy target are configured. No credentials were invented or committed.
-- The in-app browser has no available instance, so screenshot review, real
-  service-worker interaction, and device accessibility/performance audits remain
-  external.
+- The in-app browser integration has no available instance. An isolated
+  headless Chrome session supplied exact desktop/mobile screenshots and DOM
+  interaction evidence instead; physical-device accessibility/performance and
+  install/offline-audio checks remain external.
 - Unknown dynamic audiobook pages currently render noindex not-found UI with a
   streamed HTTP `200`; retain this known Next.js behavior unless a host-level
   hard `404` requirement is added.
@@ -113,13 +124,12 @@ Follow `docs/DEPLOYMENT.md` for the release order,
 
 ## Files Status
 
-- Created: account and versioned library APIs; account-deletion control; library
-  contracts/tests; request-origin, quota, observability, and redaction modules;
-  rate-limit migration/rollback/pgTAP; security policy; deployment, OAuth, and
-  operations guides.
-- Modified: all protected API access, authentication client reuse, library
-  repository, legal/settings UI, security headers, CI, dependencies, README,
-  implementation plan, and this handoff.
+- Created: interactive library browser; mobile account menu; metadata editor;
+  preference contracts, repository, API, UI, and tests; extracted player audio
+  source hook; preference pgTAP coverage.
+- Modified: application layout/shell, library/detail/offline/settings routes,
+  player controls and defaults, design tokens, rate-limit migration/tests,
+  README, implementation plan, and this handoff.
 - Currently being edited: none.
 - Next work: external staging/provider/browser validation only, followed by fixes
   if those evidence-based checks find issues.

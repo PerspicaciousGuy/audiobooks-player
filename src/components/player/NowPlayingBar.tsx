@@ -32,10 +32,10 @@ export default function NowPlayingBar() {
         </div>
         <div className="hidden items-center gap-2 sm:flex">
           <button
-            aria-label="Rewind 15 seconds"
+            aria-label={`Rewind ${player.skipBackSeconds} seconds`}
             className="hover:bg-surface-muted focus-visible:ring-focus grid size-11 place-items-center rounded-full focus-visible:ring-2 focus-visible:outline-none disabled:opacity-40"
             disabled={!isActive}
-            onClick={() => player.skip(-15)}
+            onClick={() => player.skip(-player.skipBackSeconds)}
             type="button"
           >
             <Icon className="size-5" name="rewind" />
@@ -53,10 +53,10 @@ export default function NowPlayingBar() {
             />
           </button>
           <button
-            aria-label="Forward 30 seconds"
+            aria-label={`Forward ${player.skipForwardSeconds} seconds`}
             className="hover:bg-surface-muted focus-visible:ring-focus grid size-11 place-items-center rounded-full focus-visible:ring-2 focus-visible:outline-none disabled:opacity-40"
             disabled={!isActive}
-            onClick={() => player.skip(30)}
+            onClick={() => player.skip(player.skipForwardSeconds)}
             type="button"
           >
             <Icon className="size-5 rotate-180" name="rewind" />

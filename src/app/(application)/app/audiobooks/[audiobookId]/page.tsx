@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import BookCover from "@/components/library/BookCover";
+import AudiobookMetadataEditor from "@/components/library/AudiobookMetadataEditor";
 import OfflineDownloadButton from "@/components/offline/OfflineDownloadButton";
 import BookmarkList from "@/components/player/BookmarkList";
 import ChapterList from "@/components/player/ChapterList";
@@ -11,6 +12,7 @@ import Icon from "@/components/ui/Icon";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { getOwnedAudiobook } from "@/features/library/repository";
 import { getAudiobookById } from "@/lib/mock/library";
+import { environment } from "@/lib/config/environment";
 
 interface AudiobookPageProps {
   params: Promise<{ audiobookId: string }>;
@@ -94,6 +96,10 @@ export default async function AudiobookPage({ params }: AudiobookPageProps) {
           </div>
         </div>
       </section>
+
+      {environment.authMode === "supabase" ? (
+        <AudiobookMetadataEditor audiobook={audiobook} />
+      ) : null}
 
       <div id="player">
         <ExpandedPlayer audiobook={audiobook} />

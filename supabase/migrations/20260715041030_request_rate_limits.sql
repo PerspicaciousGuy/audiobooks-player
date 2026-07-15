@@ -12,6 +12,7 @@ create table private.request_rate_limits (
       'import_preview',
       'library_read',
       'picker_token',
+      'preferences_update',
       'progress',
       'stream'
     )
@@ -54,6 +55,7 @@ begin
       ('import_preview', 20, 60),
       ('library_read', 120, 60),
       ('picker_token', 60, 60),
+      ('preferences_update', 30, 60),
       ('progress', 180, 60),
       ('stream', 600, 60)
   ) as limits(bucket, quota, window_seconds)

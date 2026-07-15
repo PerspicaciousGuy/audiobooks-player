@@ -13,6 +13,7 @@ import type { Audiobook, Chapter } from "@/types/audiobook";
 interface SourceSelectionInput {
   audioRef: RefObject<HTMLAudioElement | null>;
   audiobook: Audiobook | undefined;
+  defaultPlaybackRate: number;
   pendingSeekRef: MutableRefObject<number>;
   setAudiobook: Dispatch<SetStateAction<Audiobook | undefined>>;
   setError: Dispatch<SetStateAction<string | undefined>>;
@@ -70,9 +71,9 @@ export function useSourceSelection(input: SourceSelectionInput): {
           ({ id }) => id === nextAudiobook.resume?.audiobookFileId,
         ) ?? 0,
       );
-      if (nextAudiobook.resume) {
-        input.setPlaybackRate(nextAudiobook.resume.playbackRate);
-      }
+      input.setPlaybackRate(
+        nextAudiobook.resume?.playbackRate ?? input.defaultPlaybackRate,
+      );
       selectSource(
         nextAudiobook,
         resumeSourceIndex,
