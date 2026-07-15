@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import type {
   Audiobook,
+  AudioSource,
   Bookmark,
   Chapter,
   CoverTone,
@@ -18,8 +19,11 @@ export const audiobookRowSchema = z.object({
 
 export const audiobookFileRowSchema = z.object({
   audiobook_id: z.string().uuid(),
+  duration_ms: z.number().nullable(),
   file_name: z.string(),
+  id: z.string().uuid(),
   mime_type: z.string(),
+  sequence: z.number(),
 });
 
 export const progressRowSchema = z.object({
@@ -29,6 +33,7 @@ export const progressRowSchema = z.object({
 });
 
 export const chapterRowSchema = z.object({
+  audiobook_file_id: z.string().uuid().nullable(),
   end_ms: z.number().nullable(),
   id: z.string().uuid(),
   start_ms: z.number(),
@@ -104,12 +109,17 @@ export function mapAudiobook(
         )
       : 0;
   const chapters: Chapter[] = chapterRows.map((chapter) => ({
+    ...(chapter.audiobook_file_id
+      ? { audiobookFileId: chapter.audiobook_file_id }
+      : {}),
     duration: durationLabel(
       chapter.end_ms ? chapter.end_ms - chapter.start_ms : null,
     ),
+    ...(chapter.end_ms ? { endMs: chapter.end_ms } : {}),
     id: chapter.id,
     isCurrent: false,
     startTime: timestampLabel(chapter.start_ms),
+    startMs: chapter.start_ms,
     title: chapter.title,
   }));
   const chapterTitles = new Map(
@@ -123,6 +133,15 @@ export function mapAudiobook(
     label: bookmark.note ?? "Saved moment",
     timestamp: timestampLabel(bookmark.position_ms),
   }));
+  const sources: AudioSource[] = files
+    .toSorted((left, right) => left.sequence - right.sequence)
+    .map((file) => ({
+      durationMs: file.duration_ms,
+      id: file.id,
+      mimeType: file.mime_type,
+      name: file.file_name,
+      sequence: file.sequence,
+    }));
 
   return {
     author: row.author ?? "Unknown author",
@@ -146,6 +165,7 @@ export function mapAudiobook(
           ? `${progressPercent}% listened`
           : "Not started",
     progressPercent,
+    sources,
     title: row.title,
   };
 }

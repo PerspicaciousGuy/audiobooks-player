@@ -13,6 +13,7 @@ const REFRESH_BUFFER_MS = 60_000;
 
 export async function getValidDriveCredentials(
   userId: string,
+  forceRefresh = false,
 ): Promise<DriveCredentials> {
   const config = getGoogleDriveRuntimeConfig();
   const connection = await getDriveConnection(userId);
@@ -28,8 +29,8 @@ export async function getValidDriveCredentials(
   );
 
   if (
-    new Date(credentials.expiresAt).getTime() >
-    Date.now() + REFRESH_BUFFER_MS
+    !forceRefresh &&
+    new Date(credentials.expiresAt).getTime() > Date.now() + REFRESH_BUFFER_MS
   ) {
     return credentials;
   }

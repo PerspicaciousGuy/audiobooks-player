@@ -7,12 +7,14 @@ storage, while synchronizing metadata, progress, bookmarks, and preferences.
 
 ## Current status
 
-Phases 0 and 1 are implemented, and the Phase 2-3 backend code is complete
+Phases 0 and 1 are implemented, and the Phase 2-4 application code is complete
 pending live-provider verification. The repository includes the responsive
 visual shell, RLS-backed Supabase sessions, separate secure Drive authorization,
 explicit-action Google Picker loading, server-side Drive validation, bounded
 ID3 metadata/chapter parsing, editable file grouping, duplicate handling, and a
-transactional import into the real library. Functional playback, sync, offline
+transactional import into the real library. The shared player uses one audio
+element, an authenticated bounded-Range proxy, multi-file continuation, chapter
+jumps, Media Session, rate, volume, and sleep controls. Progress sync, offline
 storage, and the service worker remain later-phase work. Final desktop/mobile
 visual approval for Phase 1 also remains pending.
 
@@ -103,9 +105,12 @@ must never be committed.
 
 Authenticated application APIs currently include
 `GET /api/v1/drive/picker-token`, `POST /api/v1/imports/preview`, and
-`POST /api/v1/imports`. Import confirmation never trusts Picker metadata from
-the browser; the server re-fetches every selected Drive file before calling the
-single-transaction database function.
+`POST /api/v1/imports`, plus the owned-file-only
+`GET /api/v1/audiobooks/[audiobookId]/stream?fileId=...` endpoint. Import
+confirmation never trusts Picker metadata from the browser; the server
+re-fetches every selected Drive file before calling the single-transaction
+database function. Streaming forwards one capped Range and pipes the Drive body
+without buffering the audiobook in application memory.
 
 ## CI plan
 

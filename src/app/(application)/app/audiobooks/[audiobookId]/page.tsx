@@ -106,7 +106,7 @@ export default async function AudiobookPage({ params }: AudiobookPageProps) {
             description={`${audiobook.duration} total listening time`}
             title="Chapters"
           />
-          <ChapterList chapters={audiobook.chapters} />
+          <ChapterList audiobook={audiobook} />
         </section>
         <aside className="flex flex-col gap-6">
           <SectionHeading title="Bookmarks" />
