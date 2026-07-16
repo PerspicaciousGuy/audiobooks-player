@@ -85,9 +85,9 @@ logs, seven daily restore points, and 30-day encrypted pre-release exports.
 
 ## In Progress
 
-The canonical OAuth redirect fix is locally verified and awaits CI plus Koyeb
-deployment. Interactive hosted browser and physical-device release evidence
-then remains.
+The canonical OAuth redirect fix is deployed and verified from live Koyeb
+headers. The user's authenticated Drive connection retry is the next check;
+later hosted browser and physical-device release evidence remains.
 
 ## Pending
 
@@ -103,6 +103,10 @@ then remains.
   returns the canonical Koyeb origin from Drive start, Drive callback, and
   Supabase callback routes. This reproduces the proxy-origin condition without
   allowing it to control the redirect destination.
+- Live Koyeb probes after deployment return the canonical Koyeb origin from
+  `/auth/drive/start`, `/auth/drive/callback`, and `/auth/callback`; none return
+  localhost. GitHub Actions run `29504091895` passes quality/build and the clean
+  migration/RLS/rollback-recovery job for commit `fb9771c`.
 - All five pgTAP files pass through the linked hosted query path. The
   initial-schema suite remains compatible with clean CI and existing real users.
 - `npm run test:coverage`: passed; current measured coverage is 71.31%
@@ -186,8 +190,8 @@ Follow `docs/DEPLOYMENT.md` for the release order,
   route, and both Drive OAuth route handlers,
   `supabase/tests/database/initial_schema.test.sql`,
   `supabase/tests/database/request_rate_limits.test.sql`, and this handoff.
-- Currently Being Edited: canonical OAuth redirect handling behind Koyeb.
-- Planned to Edit: `HANDOFF.md` after live deployment evidence; later
-  browser/device findings may identify targeted changes.
+- Currently Being Edited: none after the canonical redirect deployment.
+- Planned to Edit: authenticated browser/device findings may identify later
+  targeted changes.
 - Untouched: `.env`, `.env.example`, secret values, existing migration contents,
   and user Google Drive files.
