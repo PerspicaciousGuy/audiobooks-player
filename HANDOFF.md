@@ -71,7 +71,7 @@ Added `scripts/database-recovery.mjs` and its CI command. It verifies that every
 migration has exactly one rollback, applies the rollback set in reverse order,
 proves the application relations were removed, resets to the forward migration
 set, and reruns the pgTAP/RLS suite. The local application verification passes;
-the destructive database portion awaits its disposable GitHub runner.
+the destructive database portion passes on its disposable GitHub runner.
 
 ## In Progress
 
@@ -107,9 +107,10 @@ repository, build, hosted database, and clean CI database checks are complete.
 - The live Koyeb health, landing, and sign-in routes return `200`. A multipart
   production sign-in probe returns `303` to Supabase with the exact Koyeb
   callback and intended `/app` destination.
-- GitHub Actions run `29501262596` passes both `Quality and Build` and
+- GitHub Actions run `29502764950` passes both `Quality and Build` and
   `Migration and RLS Tests`; the latter starts a clean Supabase stack, applies
-  all migrations, and runs the complete pgTAP/RLS suite.
+  all migrations, runs the complete pgTAP/RLS suite, rolls every application
+  migration back, reapplies them, and passes the database suite again.
 - A repeatable `supabase:test:recovery` verifier now checks one-to-one rollback
   coverage, applies every rollback in reverse order on the disposable CI
   database, proves the application relations were removed, reapplies every
@@ -169,9 +170,7 @@ Follow `docs/DEPLOYMENT.md` for the release order,
   `package.json`, `docs/DEPLOYMENT.md`,
   `supabase/tests/database/initial_schema.test.sql`,
   `supabase/tests/database/request_rate_limits.test.sql`, and this handoff.
-- Currently Being Edited: rollback/recovery CI verification and its release
-  documentation.
-- Planned to Edit: `HANDOFF.md` after CI evidence; browser/device findings may
-  identify later targeted changes.
+- Currently Being Edited: none after the rollback/recovery verification pass.
+- Planned to Edit: browser/device findings may identify later targeted changes.
 - Untouched: application source behavior, `.env`, `.env.example`, secret values,
   existing migration contents, and user Google Drive files.
