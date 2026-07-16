@@ -11,8 +11,8 @@ user's browser profile.
 
 ## Current State
 
-- The planned implementation for Phases 0-7 is complete. The current release
-  verification fixes are local and awaiting a direct `main` push.
+- The planned implementation for Phases 0-7 is complete. Release-verification
+  fixes are on `main`, and both GitHub Actions jobs pass.
 - Direct pushes to `main` are permitted only when the user explicitly asks to
   push or sync directly. Force-pushing `main` is prohibited.
 - A Koyeb Free web service in Frankfurt and a hosted Supabase project are
@@ -68,13 +68,11 @@ Supabase stacks.
 
 ## In Progress
 
-The first pushed CI run proved the quality/build job green and exposed the
-hosted-only function assumption in the clean database job. The conditional
-migration correction is awaiting verification and a follow-up direct push.
+Interactive hosted browser and physical-device release evidence remains. All
+repository, build, hosted database, and clean CI database checks are complete.
 
 ## Pending
 
-- Push the release-verification fixes to `main` and require both CI jobs to pass.
 - Complete the real hosted Google sign-in, Drive consent/import, playback,
   progress, bookmark, reconnect/revoke, account-deletion, PWA, and physical
   device evidence flows.
@@ -102,6 +100,9 @@ migration correction is awaiting verification and a follow-up direct push.
 - The live Koyeb health, landing, and sign-in routes return `200`. A multipart
   production sign-in probe returns `303` to Supabase with the exact Koyeb
   callback and intended `/app` destination.
+- GitHub Actions run `29501262596` passes both `Quality and Build` and
+  `Migration and RLS Tests`; the latter starts a clean Supabase stack, applies
+  all migrations, and runs the complete pgTAP/RLS suite.
 
 ## External Release Gates
 
