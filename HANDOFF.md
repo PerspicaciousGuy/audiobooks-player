@@ -62,12 +62,15 @@ declared npm `11.6.1`. Corrected the rate-limit pgTAP signature and made the
 initial-schema fixture counts independent of real hosted users. Added and
 applied migration `20260716062426_restrict_rls_auto_enable_execution`, which
 keeps the `ensure_rls` event trigger intact while removing direct anonymous and
-authenticated RPC execution of its SECURITY DEFINER function.
+authenticated RPC execution of its SECURITY DEFINER function. The migration is
+conditional because this hosted-project helper is absent from clean local
+Supabase stacks.
 
 ## In Progress
 
-Final diff, secret, CI, and hosted-deployment verification before the direct
-`main` push.
+The first pushed CI run proved the quality/build job green and exposed the
+hosted-only function assumption in the clean database job. The conditional
+migration correction is awaiting verification and a follow-up direct push.
 
 ## Pending
 
