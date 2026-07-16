@@ -14,6 +14,23 @@ The deployment is provider-neutral. Validate the selected host's response-size,
 duration, concurrency, bandwidth, and egress constraints with representative
 long audiobooks before launch.
 
+## Environment Classification
+
+The current Koyeb Free service and Supabase Free project are the portfolio
+**staging** environment. They are not approved as production infrastructure.
+Koyeb documents Free Instances as preview/hobby capacity that should not be used
+for production, and Supabase Free does not include guaranteed automatic
+backups. See the current [Koyeb instance limits](https://www.koyeb.com/docs/reference/instances),
+[Koyeb retention features](https://www.koyeb.com/pricing), and
+[Supabase backup guidance](https://supabase.com/docs/guides/platform/backups).
+
+Production promotion requires a non-Free Koyeb instance (or equivalent Node
+host) and Supabase Pro (or equivalent managed Postgres) with at least seven days
+of runtime/API/database logs and seven daily database restore points. Keep an
+encrypted logical export made before every schema release for 30 days outside
+the database provider. The existing free services remain suitable for portfolio
+demonstration and staging validation without creating a paid commitment.
+
 ## Release Order
 
 1. Create a staging Supabase project and record the rollback point.

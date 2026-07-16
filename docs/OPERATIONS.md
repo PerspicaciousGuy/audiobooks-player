@@ -12,6 +12,21 @@ account-deletion failures, elevated API `5xx`, Google `401/403`, invalid Range
 responses, and download-size mismatches. Select and disclose finite application
 log and managed-backup retention periods before launch.
 
+## Retention Policy
+
+The current portfolio staging environment uses the provider limits available on
+the free plans: seven days of Koyeb runtime logs and one day of Supabase API and
+database logs. Supabase Free does not provide a guaranteed downloadable managed
+backup, so create an encrypted logical export before each staging schema change
+and retain it off-provider for 30 days.
+
+Before production promotion, move to infrastructure that guarantees at least
+seven days of runtime/API/database logs and seven daily database restore points.
+Create an additional encrypted logical export before every production schema
+release and retain it off-provider for 30 days. Limit backup access to the
+project owner, test restoration with disposable infrastructure, and reconcile
+account deletions before exposing restored data.
+
 ## Incident Response
 
 1. Preserve non-sensitive timestamps, release IDs, and aggregate event counts.

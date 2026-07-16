@@ -15,9 +15,10 @@ user's browser profile.
   fixes are on `main`, and both GitHub Actions jobs pass.
 - Direct pushes to `main` are permitted only when the user explicitly asks to
   push or sync directly. Force-pushing `main` is prohibited.
-- A Koyeb Free web service in Frankfurt and a hosted Supabase project are
-  configured. Real credentials live only in ignored local environment files
-  and provider secret managers.
+- A Koyeb Free web service in Frankfurt and a Supabase Free project are
+  configured as the portfolio staging environment, not production. Real
+  credentials live only in ignored local environment files and provider secret
+  managers.
 - Phase 1 provides the responsive warm-editorial landing and application UI for
   desktop and mobile, including principal empty/loading/error states, live
   library search/filters, mobile account navigation, editable book details,
@@ -73,6 +74,12 @@ proves the application relations were removed, resets to the forward migration
 set, and reruns the pgTAP/RLS suite. The local application verification passes;
 the destructive database portion passes on its disposable GitHub runner.
 
+Classified the existing free Koyeb/Supabase deployment as portfolio staging and
+documented finite retention. Staging accepts the provider's seven-day Koyeb and
+one-day Supabase log windows plus 30-day encrypted pre-migration exports.
+Production requires paid/equivalent infrastructure with at least seven days of
+logs, seven daily restore points, and 30-day encrypted pre-release exports.
+
 ## In Progress
 
 Interactive hosted browser and physical-device release evidence remains. All
@@ -115,24 +122,23 @@ repository, build, hosted database, and clean CI database checks are complete.
   coverage, applies every rollback in reverse order on the disposable CI
   database, proves the application relations were removed, reapplies every
   migration, and reruns the complete database suite.
+- Environment classification and retention are decided: the current free
+  providers are staging; production requires seven-day logs, seven daily
+  restore points, and 30-day encrypted pre-release logical exports.
 
 ## External Release Gates
 
 Local implementation is complete, but release is not approved until the
 following checks run against real infrastructure:
 
-1. Confirm the current Koyeb Free/Supabase projects are staging or production,
-   then choose production log retention and backup retention.
-2. Require the clean CI migration/RLS and rollback/recovery job to pass. All
-   five migrations are applied to the currently linked hosted project.
-3. Google identity, Drive OAuth, and Picker credentials are configured. Verify
+1. Google identity, Drive OAuth, and Picker credentials are configured. Verify
    hosted sign-in restoration/sign-out, consent, import, reconnect, revocation,
    and account deletion with disposable data.
-4. Validate large-file Range streaming, full downloads, host concurrency,
+2. Validate large-file Range streaming, full downloads, host concurrency,
    timeout, bandwidth, and egress behavior.
-5. Use two authenticated sessions to prove stale-write rejection, progress
+3. Use two authenticated sessions to prove stale-write rejection, progress
    restoration, and bookmark isolation.
-6. Reconfirm the passing local visuals on representative physical devices and
+4. Reconfirm the passing local visuals on representative physical devices and
    prove PWA install, update, partial cleanup, quota failure, eviction, source
    changes, and airplane-mode multi-file playback.
 
@@ -167,7 +173,7 @@ Follow `docs/DEPLOYMENT.md` for the release order,
   `supabase/migrations/20260716062426_restrict_rls_auto_enable_execution.sql`
   and its matching rollback file, plus `scripts/database-recovery.mjs`.
 - Modified: `.github/workflows/ci.yml`,
-  `package.json`, `docs/DEPLOYMENT.md`,
+  `package.json`, `docs/DEPLOYMENT.md`, `docs/OPERATIONS.md`,
   `supabase/tests/database/initial_schema.test.sql`,
   `supabase/tests/database/request_rate_limits.test.sql`, and this handoff.
 - Currently Being Edited: none after the rollback/recovery verification pass.
