@@ -11,11 +11,13 @@ user's browser profile.
 
 ## Current State
 
-- The planned local implementation for Phases 0-7 is complete. Phase 0 is on
-  `origin/main`; the later local checkpoint commits are on
-  `feat/phase-1-visual-shell` and have not been pushed.
+- The planned implementation for Phases 0-7 is complete and synchronized to
+  `origin/main`.
 - Direct pushes to `main` are permitted only when the user explicitly asks to
   push or sync directly. Force-pushing `main` is prohibited.
+- A Koyeb Free web service in Frankfurt and a hosted Supabase project are
+  configured. Real credentials live only in ignored local environment files
+  and provider secret managers.
 - Phase 1 provides the responsive warm-editorial landing and application UI for
   desktop and mobile, including principal empty/loading/error states, live
   library search/filters, mobile account navigation, editable book details,
@@ -49,19 +51,31 @@ user's browser profile.
 
 ## Last Action
 
-Closed the remaining provider-independent verification and API-contract gaps.
-Added behavior tests for pending player state, end-of-chapter and duration sleep
-timers, multi-file advancement, versioned progress validation, exact Drive OAuth
-scope/PKCE/token behavior, server-side Drive file validation, and bounded stream
-retry after a rejected access token.
+Linked the repository to the hosted Supabase project and applied the four
+reviewed migrations after an exact dry run. Verified matching local/remote
+migration history, all nine application tables with RLS enabled, zero persisted
+test users, expected rate-limit privileges, and clean remote schema linting.
 
-Added a dependency-free production smoke runner and made it part of `verify`
-and CI. It starts the built app, checks health, public/legal/PWA resources,
-manifest install metadata, security headers, and anonymous API protection, then
-stops the process. The runner exposed inconsistent API error media types; every
-versioned route now returns standard RFC 9457 fields with
-`application/problem+json`, import endpoints handle malformed JSON explicitly,
-and client error handling consumes the standard `detail` field.
+The linked pgTAP wrapper could not run because Docker Desktop is unavailable.
+Executing the SQL files through the hosted query path passed the initial schema,
+import transaction, progress conflict, and user preferences checks. The
+rate-limit test has an existing pgTAP type error: it wraps `has_table(...)`
+inside `ok(...)`. An in-memory corrected execution completed without a SQL
+error, and independent hosted queries verified its table and privilege checks;
+the tracked test file was not modified.
+
+## In Progress
+
+None. The hosted schema deployment and verification pass is complete.
+
+## Pending
+
+- Configure Supabase Google identity, the separate Google Drive OAuth client,
+  and Google Picker.
+- Correct the rate-limit pgTAP assertion after explicit approval, then run the
+  unmodified linked database suite through Docker or CI.
+- Decide whether to remediate the advisor findings with a new reviewed
+  migration.
 
 ## Verification
 
@@ -78,17 +92,21 @@ and client error handling consumes the standard `detail` field.
 - Repository audit: `git diff --check` passes, no TS/TSX file exceeds 200 lines,
   and no API-key, private-key, or JWT-shaped secret was found.
 - Development and production servers are stopped.
+- Hosted Supabase migration history matches all four local migrations. Remote
+  lint reports no schema errors, every application table has RLS enabled, and
+  the database contains no persisted fixture users from verification.
 
 ## External Release Gates
 
 Local implementation is complete, but release is not approved until the
 following checks run against real infrastructure:
 
-1. Select a Node streaming host, canonical domain, Supabase plan/region, log
-   retention, and backup retention.
-2. Apply migrations to staging, generate database types, run all pgTAP/RLS
-   tests, and test rollback/recovery. Docker is unavailable locally, so only the
-   configured CI/staging job can currently execute these checks.
+1. Confirm the current Koyeb Free/Supabase projects are staging or production,
+   then choose production log retention and backup retention.
+2. Fix the tracked rate-limit pgTAP assertion, run the unmodified linked database
+   suite through Docker or CI, generate database types, and test
+   rollback/recovery. The four migrations are already applied to the currently
+   linked hosted project.
 3. Configure Supabase Google identity plus Drive OAuth/Picker clients and verify
    sign-in, restoration, sign-out, consent, import, reconnect, revocation, and
    account deletion with disposable data.
@@ -104,10 +122,24 @@ Follow `docs/DEPLOYMENT.md` for the release order,
 `docs/GOOGLE_OAUTH_VERIFICATION.md` for Google setup/evidence, and
 `docs/OPERATIONS.md` for monitoring and incidents.
 
-## Known Constraints
+## Known Issues
 
-- No Docker, hosted Supabase project, Google OAuth clients, production domain,
-  or deploy target are configured. No credentials were invented or committed.
+- Docker Desktop is unavailable, so `supabase test db --linked` cannot run
+  locally. Hosted SQL execution provides partial coverage but does not replace
+  a clean CI pgTAP run.
+- `supabase/tests/database/request_rate_limits.test.sql` incorrectly wraps the
+  text-returning `has_table(...)` assertion in boolean `ok(...)` and fails until
+  that tracked test is corrected.
+- Supabase advisors warn that project-default `public.rls_auto_enable()` is
+  executable by `anon` and `authenticated`. The authenticated warning for
+  `public.consume_request_quota(text)` is intentional and covered by the access
+  model. Neither grant was changed in this deployment task.
+- Advisor review found missing indexes on nullable foreign-key columns:
+  `bookmarks.audiobook_file_id`, `bookmarks.chapter_id`,
+  `chapters.audiobook_file_id`, `playback_progress.audiobook_file_id`, and
+  `playback_progress.chapter_id`.
+- Google OAuth clients are not configured yet. No credentials were invented or
+  committed.
 - The in-app browser integration package is missing its required browser client.
   An earlier isolated headless Chrome session supplied exact desktop/mobile
   screenshots and DOM interaction evidence; repeatable Playwright journeys and
@@ -123,14 +155,12 @@ Follow `docs/DEPLOYMENT.md` for the release order,
 
 ## Files Status
 
-- Created: player/progress/Drive/OAuth/stream contract tests, the RFC 9457
-  response helper and tests, the test-only server boundary, and the production
-  HTTP smoke runner.
-- Modified: all versioned API error paths and their client consumers, import JSON
-  handling, Vitest server-module resolution, package scripts, CI, README,
-  implementation plan, and this handoff.
-- Currently being edited: none.
-- Next work: external staging/provider/browser validation only, followed by fixes
-  if those evidence-based checks find issues.
-- Untouched: real credentials, remote branches, production services, and user
-  Google Drive files.
+- Created: ignored Supabase CLI linkage metadata under `supabase/.temp/`; no
+  tracked source files were created.
+- Modified: this handoff only. Hosted Supabase migration history and schema were
+  updated by the four existing tracked migrations.
+- Currently Being Edited: none.
+- Planned to Edit: the rate-limit pgTAP assertion only after explicit approval;
+  any index or function-grant remediation requires a new reviewed migration.
+- Untouched: application source, existing migrations, `.env`, `.env.example`,
+  Google OAuth configuration, remote Git history, and user Google Drive files.
