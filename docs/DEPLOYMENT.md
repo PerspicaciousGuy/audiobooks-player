@@ -21,10 +21,14 @@ long audiobooks before launch.
 3. Generate database types from the migrated project; do not hand-label types as
    generated.
 4. Run all pgTAP tests in `supabase/tests/database`.
-5. Configure the environment values from `.env.example` in the host's secret
+5. Run `npm run supabase:test:recovery` against the disposable staging/local
+   stack to apply every rollback in reverse order, reapply all migrations, and
+   rerun the database tests. Never run this destructive verifier against a
+   shared or production database.
+6. Configure the environment values from `.env.example` in the host's secret
    manager. Never copy secrets into browser-visible variables.
-6. Deploy the Next.js production build and complete the smoke checklist below.
-7. Promote the same reviewed commit and migration set to production.
+7. Deploy the Next.js production build and complete the smoke checklist below.
+8. Promote the same reviewed commit and migration set to production.
 
 ## Environment
 

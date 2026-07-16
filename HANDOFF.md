@@ -47,7 +47,8 @@ user's browser profile.
   authenticated, same-origin, validated, and rate-limited API boundary.
 - CI runs quality, tests, build, production HTTP smoke, and production audit for
   pull requests and direct pushes to `main`. A separate clean Supabase job
-  applies migrations and runs all pgTAP/RLS tests.
+  applies migrations, runs all pgTAP/RLS tests, and exercises rollback followed
+  by migration recovery on its disposable database.
 
 ## Last Action
 
@@ -65,6 +66,12 @@ keeps the `ensure_rls` event trigger intact while removing direct anonymous and
 authenticated RPC execution of its SECURITY DEFINER function. The migration is
 conditional because this hosted-project helper is absent from clean local
 Supabase stacks.
+
+Added `scripts/database-recovery.mjs` and its CI command. It verifies that every
+migration has exactly one rollback, applies the rollback set in reverse order,
+proves the application relations were removed, resets to the forward migration
+set, and reruns the pgTAP/RLS suite. The local application verification passes;
+the destructive database portion awaits its disposable GitHub runner.
 
 ## In Progress
 
@@ -103,6 +110,10 @@ repository, build, hosted database, and clean CI database checks are complete.
 - GitHub Actions run `29501262596` passes both `Quality and Build` and
   `Migration and RLS Tests`; the latter starts a clean Supabase stack, applies
   all migrations, and runs the complete pgTAP/RLS suite.
+- A repeatable `supabase:test:recovery` verifier now checks one-to-one rollback
+  coverage, applies every rollback in reverse order on the disposable CI
+  database, proves the application relations were removed, reapplies every
+  migration, and reruns the complete database suite.
 
 ## External Release Gates
 
@@ -111,8 +122,8 @@ following checks run against real infrastructure:
 
 1. Confirm the current Koyeb Free/Supabase projects are staging or production,
    then choose production log retention and backup retention.
-2. Require the clean CI migration/RLS job to pass and test rollback/recovery.
-   All five migrations are applied to the currently linked hosted project.
+2. Require the clean CI migration/RLS and rollback/recovery job to pass. All
+   five migrations are applied to the currently linked hosted project.
 3. Google identity, Drive OAuth, and Picker credentials are configured. Verify
    hosted sign-in restoration/sign-out, consent, import, reconnect, revocation,
    and account deletion with disposable data.
@@ -153,12 +164,14 @@ Follow `docs/DEPLOYMENT.md` for the release order,
 
 - Created:
   `supabase/migrations/20260716062426_restrict_rls_auto_enable_execution.sql`
-  and its matching rollback file.
+  and its matching rollback file, plus `scripts/database-recovery.mjs`.
 - Modified: `.github/workflows/ci.yml`,
+  `package.json`, `docs/DEPLOYMENT.md`,
   `supabase/tests/database/initial_schema.test.sql`,
   `supabase/tests/database/request_rate_limits.test.sql`, and this handoff.
-- Currently Being Edited: none after the final verification pass.
-- Planned to Edit: none before CI evidence; browser/device findings may identify
-  later fixes.
+- Currently Being Edited: rollback/recovery CI verification and its release
+  documentation.
+- Planned to Edit: `HANDOFF.md` after CI evidence; browser/device findings may
+  identify later targeted changes.
 - Untouched: application source behavior, `.env`, `.env.example`, secret values,
   existing migration contents, and user Google Drive files.

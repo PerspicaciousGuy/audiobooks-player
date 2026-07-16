@@ -21,7 +21,8 @@
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "supabase:status": "supabase status",
-    "supabase:test:db": "supabase test db"
+    "supabase:test:db": "supabase test db",
+    "supabase:test:recovery": "node scripts/database-recovery.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.3",

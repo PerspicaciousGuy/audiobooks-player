@@ -86,6 +86,9 @@ jobs:
       - name: Test migrations and RLS
         run: npm run supabase:test:db
 
+      - name: Test rollback and migration recovery
+        run: npm run supabase:test:recovery
+
       - name: Stop local Supabase
         if: always()
         run: npm run supabase:stop
