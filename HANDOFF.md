@@ -53,11 +53,14 @@ user's browser profile.
 
 ## Last Action
 
-Traced the production Google sign-in action end to end. The deployed action now
-returns Supabase authorization with
-`https://greasy-bethanne-ebooks-0926d76e.koyeb.app/auth/callback` and preserves
-`next=/app`; it contains no localhost redirect. The earlier localhost failure
-therefore came from a stale or locally initiated OAuth attempt.
+Corrected the earlier localhost diagnosis after the user reproduced the issue
+with `?drive=connected`. Live response headers proved that Koyeb presents route
+handlers with an internal `https://localhost:3000` request URL. The Supabase
+callback, Drive start, and Drive callback routes used that proxy URL as their
+redirect base even though the configured OAuth callback sent to Google was
+correct. All three now construct redirects from the validated canonical
+`NEXT_PUBLIC_APP_URL`; signed redirect paths remain constrained to this origin.
+Regression tests cover the Koyeb origin and external-path rejection.
 
 Fixed the CI installer mismatch by pinning both GitHub jobs to the repository's
 declared npm `11.6.1`. Corrected the rate-limit pgTAP signature and made the
@@ -82,8 +85,9 @@ logs, seven daily restore points, and 30-day encrypted pre-release exports.
 
 ## In Progress
 
-Interactive hosted browser and physical-device release evidence remains. All
-repository, build, hosted database, and clean CI database checks are complete.
+The canonical OAuth redirect fix is locally verified and awaits CI plus Koyeb
+deployment. Interactive hosted browser and physical-device release evidence
+then remains.
 
 ## Pending
 
@@ -93,8 +97,12 @@ repository, build, hosted database, and clean CI database checks are complete.
 
 ## Verification
 
-- `npm run verify`: formatting, ESLint, strict TypeScript, 64 tests in 25 files,
+- `npm run verify`: formatting, ESLint, strict TypeScript, 66 tests in 25 files,
   the 28-route production build, and the production HTTP smoke check pass.
+- A production server deliberately reached through `http://localhost:3100`
+  returns the canonical Koyeb origin from Drive start, Drive callback, and
+  Supabase callback routes. This reproduces the proxy-origin condition without
+  allowing it to control the redirect destination.
 - All five pgTAP files pass through the linked hosted query path. The
   initial-schema suite remains compatible with clean CI and existing real users.
 - `npm run test:coverage`: passed; current measured coverage is 71.31%
@@ -174,9 +182,12 @@ Follow `docs/DEPLOYMENT.md` for the release order,
   and its matching rollback file, plus `scripts/database-recovery.mjs`.
 - Modified: `.github/workflows/ci.yml`,
   `package.json`, `docs/DEPLOYMENT.md`, `docs/OPERATIONS.md`,
+  `src/features/auth/redirects.ts`, its regression test, the Supabase callback
+  route, and both Drive OAuth route handlers,
   `supabase/tests/database/initial_schema.test.sql`,
   `supabase/tests/database/request_rate_limits.test.sql`, and this handoff.
-- Currently Being Edited: none after the rollback/recovery verification pass.
-- Planned to Edit: browser/device findings may identify later targeted changes.
-- Untouched: application source behavior, `.env`, `.env.example`, secret values,
-  existing migration contents, and user Google Drive files.
+- Currently Being Edited: canonical OAuth redirect handling behind Koyeb.
+- Planned to Edit: `HANDOFF.md` after live deployment evidence; later
+  browser/device findings may identify targeted changes.
+- Untouched: `.env`, `.env.example`, secret values, existing migration contents,
+  and user Google Drive files.

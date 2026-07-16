@@ -1,7 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import {
+  createApplicationRedirectUrl,
+  getSafeRedirectPath,
+} from "@/features/auth/redirects";
+import { environment } from "@/lib/config/environment";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { getSafeRedirectPath } from "@/features/auth/redirects";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const code = request.nextUrl.searchParams.get("code");
@@ -12,7 +16,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   if (!code || !supabase) {
     return NextResponse.redirect(
-      new URL("/auth/error?reason=callback", request.url),
+      createApplicationRedirectUrl(
+        environment.appUrl,
+        "/auth/error?reason=callback",
+      ),
     );
   }
 
@@ -20,9 +27,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   if (error) {
     return NextResponse.redirect(
-      new URL("/auth/error?reason=exchange", request.url),
+      createApplicationRedirectUrl(
+        environment.appUrl,
+        "/auth/error?reason=exchange",
+      ),
     );
   }
 
-  return NextResponse.redirect(new URL(nextPath, request.url));
+  return NextResponse.redirect(
+    createApplicationRedirectUrl(environment.appUrl, nextPath),
+  );
 }

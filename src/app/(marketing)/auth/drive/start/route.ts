@@ -1,6 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { getSafeRedirectPath } from "@/features/auth/redirects";
+import {
+  createApplicationRedirectUrl,
+  getSafeRedirectPath,
+} from "@/features/auth/redirects";
 import { getAuthenticatedIdentity } from "@/features/auth/session";
 import { getGoogleDriveRuntimeConfig } from "@/features/drive/config";
 import { createGoogleDriveAuthorizationUrl } from "@/features/drive/googleOAuth";
@@ -9,12 +12,16 @@ import {
   DRIVE_OAUTH_COOKIE_MAX_AGE_SECONDS,
   DRIVE_OAUTH_COOKIE_NAME,
 } from "@/features/drive/oauthState";
+import { environment } from "@/lib/config/environment";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const identity = await getAuthenticatedIdentity();
 
   if (!identity) {
-    const signInUrl = new URL("/auth/sign-in", request.url);
+    const signInUrl = createApplicationRedirectUrl(
+      environment.appUrl,
+      "/auth/sign-in",
+    );
     signInUrl.searchParams.set("next", "/app/onboarding");
     return NextResponse.redirect(signInUrl);
   }
@@ -23,7 +30,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   if (!config) {
     return NextResponse.redirect(
-      new URL("/app/onboarding?drive=unavailable", request.url),
+      createApplicationRedirectUrl(
+        environment.appUrl,
+        "/app/onboarding?drive=unavailable",
+      ),
     );
   }
 

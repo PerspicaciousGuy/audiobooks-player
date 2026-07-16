@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { createApplicationRedirectUrl } from "@/features/auth/redirects";
 import { getAuthenticatedIdentity } from "@/features/auth/session";
 import { getGoogleDriveRuntimeConfig } from "@/features/drive/config";
 import {
@@ -19,13 +20,10 @@ import {
   decryptDriveCredentials,
   encryptDriveCredentials,
 } from "@/features/drive/tokenEncryption";
+import { environment } from "@/lib/config/environment";
 
-function redirectWithDriveStatus(
-  request: NextRequest,
-  path: string,
-  status: string,
-): NextResponse {
-  const url = new URL(path, request.url);
+function redirectWithDriveStatus(path: string, status: string): NextResponse {
+  const url = createApplicationRedirectUrl(environment.appUrl, path);
   url.searchParams.set("drive", status);
   const response = NextResponse.redirect(url);
   response.cookies.set(DRIVE_OAUTH_COOKIE_NAME, "", {
@@ -43,7 +41,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const config = getGoogleDriveRuntimeConfig();
 
   if (!identity || !config) {
-    return redirectWithDriveStatus(request, "/app/onboarding", "unavailable");
+    return redirectWithDriveStatus("/app/onboarding", "unavailable");
   }
 
   const attempt = verifyDriveOAuthAttempt(
@@ -54,24 +52,24 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   );
 
   if (!attempt) {
-    return redirectWithDriveStatus(request, "/app/onboarding", "invalid-state");
+    return redirectWithDriveStatus("/app/onboarding", "invalid-state");
   }
 
   if (request.nextUrl.searchParams.has("error")) {
-    return redirectWithDriveStatus(request, attempt.nextPath, "cancelled");
+    return redirectWithDriveStatus(attempt.nextPath, "cancelled");
   }
 
   const code = request.nextUrl.searchParams.get("code");
 
   if (!code) {
-    return redirectWithDriveStatus(request, attempt.nextPath, "failed");
+    return redirectWithDriveStatus(attempt.nextPath, "failed");
   }
 
   try {
     const grant = await exchangeGoogleDriveCode(config, code, attempt.verifier);
 
     if (!grant.scopes.includes(DRIVE_FILE_SCOPE)) {
-      return redirectWithDriveStatus(request, attempt.nextPath, "scope-denied");
+      return redirectWithDriveStatus(attempt.nextPath, "scope-denied");
     }
 
     const existingConnection = await getDriveConnection(identity.id);
@@ -86,7 +84,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       grant.refreshToken ?? existingCredentials?.refreshToken;
 
     if (!refreshToken) {
-      return redirectWithDriveStatus(request, attempt.nextPath, "failed");
+      return redirectWithDriveStatus(attempt.nextPath, "failed");
     }
 
     const googleSubject = await getGoogleDriveSubject(grant.accessToken);
@@ -110,8 +108,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       userId: identity.id,
     });
 
-    return redirectWithDriveStatus(request, attempt.nextPath, "connected");
+    return redirectWithDriveStatus(attempt.nextPath, "connected");
   } catch {
-    return redirectWithDriveStatus(request, attempt.nextPath, "failed");
+    return redirectWithDriveStatus(attempt.nextPath, "failed");
   }
 }

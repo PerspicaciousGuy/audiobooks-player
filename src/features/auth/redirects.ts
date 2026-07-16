@@ -23,3 +23,10 @@ export function getSafeRedirectPath(
     return DEFAULT_AUTHENTICATED_PATH;
   }
 }
+
+export function createApplicationRedirectUrl(
+  appUrl: string,
+  requestedPath: string | null | undefined,
+): URL {
+  return new URL(getSafeRedirectPath(requestedPath), appUrl);
+}
