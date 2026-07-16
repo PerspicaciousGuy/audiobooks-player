@@ -45,8 +45,9 @@ values
     now()
   );
 
-select ok(
-  has_table('private', 'request_rate_limits'),
+select has_table(
+  'private',
+  'request_rate_limits',
   'private rate-limit state exists'
 );
 

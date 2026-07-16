@@ -11,8 +11,8 @@ user's browser profile.
 
 ## Current State
 
-- The planned implementation for Phases 0-7 is complete and synchronized to
-  `origin/main`.
+- The planned implementation for Phases 0-7 is complete. The current release
+  verification fixes are local and awaiting a direct `main` push.
 - Direct pushes to `main` are permitted only when the user explicitly asks to
   push or sync directly. Force-pushing `main` is prohibited.
 - A Koyeb Free web service in Frankfurt and a hosted Supabase project are
@@ -51,36 +51,37 @@ user's browser profile.
 
 ## Last Action
 
-Linked the repository to the hosted Supabase project and applied the four
-reviewed migrations after an exact dry run. Verified matching local/remote
-migration history, all nine application tables with RLS enabled, zero persisted
-test users, expected rate-limit privileges, and clean remote schema linting.
+Traced the production Google sign-in action end to end. The deployed action now
+returns Supabase authorization with
+`https://greasy-bethanne-ebooks-0926d76e.koyeb.app/auth/callback` and preserves
+`next=/app`; it contains no localhost redirect. The earlier localhost failure
+therefore came from a stale or locally initiated OAuth attempt.
 
-The linked pgTAP wrapper could not run because Docker Desktop is unavailable.
-Executing the SQL files through the hosted query path passed the initial schema,
-import transaction, progress conflict, and user preferences checks. The
-rate-limit test has an existing pgTAP type error: it wraps `has_table(...)`
-inside `ok(...)`. An in-memory corrected execution completed without a SQL
-error, and independent hosted queries verified its table and privilege checks;
-the tracked test file was not modified.
+Fixed the CI installer mismatch by pinning both GitHub jobs to the repository's
+declared npm `11.6.1`. Corrected the rate-limit pgTAP signature and made the
+initial-schema fixture counts independent of real hosted users. Added and
+applied migration `20260716062426_restrict_rls_auto_enable_execution`, which
+keeps the `ensure_rls` event trigger intact while removing direct anonymous and
+authenticated RPC execution of its SECURITY DEFINER function.
 
 ## In Progress
 
-None. The hosted schema deployment and verification pass is complete.
+Final diff, secret, CI, and hosted-deployment verification before the direct
+`main` push.
 
 ## Pending
 
-- Configure Supabase Google identity, the separate Google Drive OAuth client,
-  and Google Picker.
-- Correct the rate-limit pgTAP assertion after explicit approval, then run the
-  unmodified linked database suite through Docker or CI.
-- Decide whether to remediate the advisor findings with a new reviewed
-  migration.
+- Push the release-verification fixes to `main` and require both CI jobs to pass.
+- Complete the real hosted Google sign-in, Drive consent/import, playback,
+  progress, bookmark, reconnect/revoke, account-deletion, PWA, and physical
+  device evidence flows.
 
 ## Verification
 
 - `npm run verify`: formatting, ESLint, strict TypeScript, 64 tests in 25 files,
   the 28-route production build, and the production HTTP smoke check pass.
+- All five pgTAP files pass through the linked hosted query path. The
+  initial-schema suite remains compatible with clean CI and existing real users.
 - `npm run test:coverage`: passed; current measured coverage is 71.31%
   statements, 58.8% branches, 67.21% functions, and 73.8% lines.
 - `npm audit --audit-level=high`: zero vulnerabilities.
@@ -92,9 +93,12 @@ None. The hosted schema deployment and verification pass is complete.
 - Repository audit: `git diff --check` passes, no TS/TSX file exceeds 200 lines,
   and no API-key, private-key, or JWT-shaped secret was found.
 - Development and production servers are stopped.
-- Hosted Supabase migration history matches all four local migrations. Remote
-  lint reports no schema errors, every application table has RLS enabled, and
-  the database contains no persisted fixture users from verification.
+- Hosted Supabase migration history includes all five local migrations. Direct
+  `rls_auto_enable()` execution is denied to `anon` and `authenticated`, remains
+  available to `service_role`, and performance advisors report no issues.
+- The live Koyeb health, landing, and sign-in routes return `200`. A multipart
+  production sign-in probe returns `303` to Supabase with the exact Koyeb
+  callback and intended `/app` destination.
 
 ## External Release Gates
 
@@ -103,13 +107,11 @@ following checks run against real infrastructure:
 
 1. Confirm the current Koyeb Free/Supabase projects are staging or production,
    then choose production log retention and backup retention.
-2. Fix the tracked rate-limit pgTAP assertion, run the unmodified linked database
-   suite through Docker or CI, generate database types, and test
-   rollback/recovery. The four migrations are already applied to the currently
-   linked hosted project.
-3. Configure Supabase Google identity plus Drive OAuth/Picker clients and verify
-   sign-in, restoration, sign-out, consent, import, reconnect, revocation, and
-   account deletion with disposable data.
+2. Require the clean CI migration/RLS job to pass and test rollback/recovery.
+   All five migrations are applied to the currently linked hosted project.
+3. Google identity, Drive OAuth, and Picker credentials are configured. Verify
+   hosted sign-in restoration/sign-out, consent, import, reconnect, revocation,
+   and account deletion with disposable data.
 4. Validate large-file Range streaming, full downloads, host concurrency,
    timeout, bandwidth, and egress behavior.
 5. Use two authenticated sessions to prove stale-write rejection, progress
@@ -124,27 +126,17 @@ Follow `docs/DEPLOYMENT.md` for the release order,
 
 ## Known Issues
 
-- Docker Desktop is unavailable, so `supabase test db --linked` cannot run
-  locally. Hosted SQL execution provides partial coverage but does not replace
-  a clean CI pgTAP run.
-- `supabase/tests/database/request_rate_limits.test.sql` incorrectly wraps the
-  text-returning `has_table(...)` assertion in boolean `ok(...)` and fails until
-  that tracked test is corrected.
-- Supabase advisors warn that project-default `public.rls_auto_enable()` is
-  executable by `anon` and `authenticated`. The authenticated warning for
-  `public.consume_request_quota(text)` is intentional and covered by the access
-  model. Neither grant was changed in this deployment task.
-- Advisor review found missing indexes on nullable foreign-key columns:
-  `bookmarks.audiobook_file_id`, `bookmarks.chapter_id`,
-  `chapters.audiobook_file_id`, `playback_progress.audiobook_file_id`, and
-  `playback_progress.chapter_id`.
-- Google OAuth clients are not configured yet. No credentials were invented or
-  committed.
-- The in-app browser integration package is missing its required browser client.
-  An earlier isolated headless Chrome session supplied exact desktop/mobile
-  screenshots and DOM interaction evidence; repeatable Playwright journeys and
-  physical-device accessibility/performance/install/offline-audio checks remain
-  external.
+- Docker Desktop is unavailable, so the clean local Supabase stack cannot run.
+  Hosted SQL execution passes; the GitHub Actions clean-database job remains the
+  release authority after this push.
+- Supabase advisors retain the intentional authenticated warning for
+  `public.consume_request_quota(text)`. Leaked-password protection is disabled;
+  the product currently exposes Google OAuth only, but enable this control if
+  password authentication is introduced.
+- The ChatGPT Chrome Extension is not installed, so authenticated browser
+  journeys cannot be automated from this session. Repeatable browser journeys
+  and physical-device accessibility/performance/install/offline-audio checks
+  remain external.
 - Unknown dynamic audiobook pages currently render noindex not-found UI with a
   streamed HTTP `200`; retain this known Next.js behavior unless a host-level
   hard `404` requirement is added.
@@ -155,12 +147,14 @@ Follow `docs/DEPLOYMENT.md` for the release order,
 
 ## Files Status
 
-- Created: ignored Supabase CLI linkage metadata under `supabase/.temp/`; no
-  tracked source files were created.
-- Modified: this handoff only. Hosted Supabase migration history and schema were
-  updated by the four existing tracked migrations.
-- Currently Being Edited: none.
-- Planned to Edit: the rate-limit pgTAP assertion only after explicit approval;
-  any index or function-grant remediation requires a new reviewed migration.
-- Untouched: application source, existing migrations, `.env`, `.env.example`,
-  Google OAuth configuration, remote Git history, and user Google Drive files.
+- Created:
+  `supabase/migrations/20260716062426_restrict_rls_auto_enable_execution.sql`
+  and its matching rollback file.
+- Modified: `.github/workflows/ci.yml`,
+  `supabase/tests/database/initial_schema.test.sql`,
+  `supabase/tests/database/request_rate_limits.test.sql`, and this handoff.
+- Currently Being Edited: none after the final verification pass.
+- Planned to Edit: none before CI evidence; browser/device findings may identify
+  later fixes.
+- Untouched: application source behavior, `.env`, `.env.example`, secret values,
+  existing migration contents, and user Google Drive files.

@@ -46,13 +46,27 @@ values
   );
 
 select is(
-  (select count(*) from public.profiles),
+  (
+    select count(*)
+    from public.profiles
+    where id in (
+      '10000000-0000-0000-0000-000000000001',
+      '20000000-0000-0000-0000-000000000002'
+    )
+  ),
   2::bigint,
   'auth user creation provisions profiles'
 );
 
 select is(
-  (select count(*) from public.user_preferences),
+  (
+    select count(*)
+    from public.user_preferences
+    where user_id in (
+      '10000000-0000-0000-0000-000000000001',
+      '20000000-0000-0000-0000-000000000002'
+    )
+  ),
   2::bigint,
   'auth user creation provisions preferences'
 );
