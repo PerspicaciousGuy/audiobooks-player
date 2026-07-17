@@ -17,7 +17,7 @@ server-side Drive validation, one-time `Audiobooks` folder selection, explicit
 multi-file Picker access, bounded ID3 metadata/chapter parsing, editable file grouping,
 duplicate handling, and a transactional import into the real
 library. The shared player uses one audio element, an authenticated
-bounded-Range proxy, multi-file continuation, chapter jumps, Media Session,
+single-Range proxy, multi-file continuation, chapter jumps, Media Session,
 account-defined skip/rate defaults, volume, and sleep controls. Versioned
 progress uses atomic stale-write rejection and a bounded device retry queue;
 resume, completion, and bookmark add/delete are integrated into the player.
@@ -127,8 +127,9 @@ Authenticated application APIs currently include
 `GET /api/v1/audiobooks/[audiobookId]/stream?fileId=...` endpoint. Import
 confirmation never trusts Picker metadata from the browser; the server
 re-fetches every selected Drive file before calling the single-transaction
-database function. Streaming forwards one capped Range and pipes the Drive body
-without buffering the audiobook in application memory.
+database function. Streaming preserves one validated browser Range, supports a
+normal full response when Range is omitted, and pipes the Drive body without
+buffering the audiobook in application memory.
 
 Completed offline downloads use the separate authenticated
 `GET /api/v1/audiobooks/[audiobookId]/download?fileId=...` endpoint. The

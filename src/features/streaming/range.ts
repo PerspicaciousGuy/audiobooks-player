@@ -1,5 +1,3 @@
-export const MAX_STREAM_CHUNK_BYTES = 4 * 1024 * 1024;
-
 export interface ByteRange {
   end: number;
   header: string;
@@ -7,16 +5,11 @@ export interface ByteRange {
   start: number;
 }
 
-export function parseBoundedRange(
-  rangeHeader: string | null,
+export function parseSingleRange(
+  rangeHeader: string,
   fileSize: number,
 ): ByteRange | undefined {
   if (!Number.isSafeInteger(fileSize) || fileSize <= 0) return undefined;
-
-  if (!rangeHeader) {
-    const end = Math.min(fileSize - 1, MAX_STREAM_CHUNK_BYTES - 1);
-    return { end, header: `bytes=0-${end}`, length: end + 1, start: 0 };
-  }
 
   const match = /^bytes=(\d*)-(\d*)$/.exec(rangeHeader.trim());
 
@@ -30,7 +23,7 @@ export function parseBoundedRange(
     const suffixLength = Number(endText);
     if (!Number.isSafeInteger(suffixLength) || suffixLength <= 0)
       return undefined;
-    const length = Math.min(suffixLength, MAX_STREAM_CHUNK_BYTES, fileSize);
+    const length = Math.min(suffixLength, fileSize);
     start = fileSize - length;
     requestedEnd = fileSize - 1;
   } else {
@@ -48,11 +41,7 @@ export function parseBoundedRange(
     return undefined;
   }
 
-  const end = Math.min(
-    requestedEnd,
-    fileSize - 1,
-    endText ? start + MAX_STREAM_CHUNK_BYTES - 1 : fileSize - 1,
-  );
+  const end = Math.min(requestedEnd, fileSize - 1);
   return {
     end,
     header: `bytes=${start}-${end}`,

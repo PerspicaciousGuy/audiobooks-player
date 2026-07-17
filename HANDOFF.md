@@ -54,28 +54,27 @@ user's browser profile.
 
 ## Last Action
 
-Fixed the hosted M4B import, Drive playback, and progress-response failures.
-Drive files with an M4B or M4A extension now accept Google Drive's `video/mp4`
-classification and normalize MP4-container aliases to `audio/mp4` for browser
-playback. Import rejection messages now identify trash, download permissions,
-missing size, and unsupported type separately.
+Corrected the remaining authenticated Drive playback proxy behavior after M4B
+import succeeded but both MP3 and M4B still failed to play. Stream and download
+ownership lookups now reuse the Supabase client that already passed identity
+verification and quota enforcement instead of opening a second session client.
 
-The Range proxy now preserves browser open-ended requests instead of ending the
-response after 4 MiB, while retaining the chunk limit for explicitly bounded
-requests. Its header timeout is cleared once Google responds so it cannot abort
-an active response body. Persisted progress schemas now accept PostgreSQL's
-offset-form timestamps, eliminating the confirmed progress `PUT` 502. No OAuth
-scope, credential, environment, migration, dependency, or user file changed.
+The stream route now preserves one exact, validated browser Range rather than
+truncating explicit requests, and requests without Range receive a normal full
+`200` response. Both forms pipe the Drive body without buffering it in
+application memory. README and security boundaries now describe the actual
+single-range behavior. No credential, environment, migration, dependency,
+imported record, or Drive file changed.
 
 ## In Progress
 
-None. The import, stream, and progress fixes pass the complete local verifier
-and are ready for Koyeb deployment.
+None. The standards-correct authenticated stream proxy passes the complete
+local verifier and is ready for Koyeb deployment.
 
 ## Pending
 
-- Deploy this build, reselect the previously rejected M4B, and verify both the
-  M4B and existing MP3 through real hosted playback and seeking.
+- Deploy this build and verify the existing imported M4B and MP3 through real
+  hosted playback and seeking; re-import is not required.
 - Complete the remaining hosted progress, bookmark, reconnect/revoke,
   account-deletion, PWA, and physical-device evidence flows.
 
@@ -83,6 +82,16 @@ and are ready for Koyeb deployment.
 
 - `npm run verify` passes: formatting, ESLint, strict TypeScript, all 80 tests in
   27 files, the 29-route production build, and production HTTP smoke.
+- The hosted private quota table records two successful authenticated `stream`
+  authorizations for the affected account. This rules out missing cookies,
+  login state, and pre-route authentication as the playback failure.
+- Read-only probes of both imported files confirm Google returns exact `206`
+  responses for full, open-ended, and suffix ranges. The M4B also returns the
+  exact expected full `200` response when Range is omitted: 288,572,707 bytes,
+  no `Content-Range`, and a live body.
+- Focused tests now cover exact open-ended, suffix, and explicit ranges larger
+  than four MiB. Strict types confirm both stream and download routes pass the
+  already-authorized Supabase client into the owned-file lookup.
 - A read-only query confirmed PostgreSQL returns the affected progress value as
   `2026-07-17T03:36:52.798+00:00`; regression tests now cover that exact shape
   in both the progress response and library row contracts.
@@ -187,8 +196,8 @@ Follow `docs/DEPLOYMENT.md` for the release order,
   subfolders must be moved directly into `Audiobooks` for this first explicit
   selection flow; larger-library batching and nested-folder authorization are
   not implemented yet.
-- The new `video/mp4` M4B path and open-ended Range response still require the
-  hosted, authenticated Google account check after Koyeb deploys this build.
+- The corrected exact-Range and no-Range response paths still require the
+  hosted, authenticated playback check after Koyeb deploys this build.
 - `IMPLEMENTATION_PLAN.md` exceeds the generic 500-line guideline but remains a
   single cohesive planning artifact.
 
@@ -196,9 +205,8 @@ Follow `docs/DEPLOYMENT.md` for the release order,
 
 - Created: `src/features/library/mapper.test.ts` for the persisted Postgres
   timestamp regression.
-- Modified: Drive file validation and tests; progress and library timestamp
-  contracts; Range parsing and tests; Drive streaming timeout behavior and
-  tests; and this handoff.
+- Modified: stream and download routes; owned-file lookup; Range parsing and
+  tests; README; security policy; and this handoff.
 - Currently Being Edited: none after verification.
 - Planned to Edit: only targeted findings from hosted M4B/MP3 playback and the
   remaining device release checks.

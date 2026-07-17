@@ -1,8 +1,7 @@
 import "server-only";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-
-import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 const streamFileSchema = z.object({
   byte_size: z.coerce.number().int().positive().max(Number.MAX_SAFE_INTEGER),
@@ -21,13 +20,10 @@ export interface OwnedStreamFile {
 }
 
 export async function getOwnedStreamFile(
+  supabase: SupabaseClient,
   audiobookId: string,
   fileId: string,
 ): Promise<OwnedStreamFile | undefined> {
-  const supabase = await createServerSupabaseClient();
-
-  if (!supabase) return undefined;
-
   const { data, error } = await supabase
     .from("audiobook_files")
     .select("id, drive_file_id, file_name, mime_type, byte_size")

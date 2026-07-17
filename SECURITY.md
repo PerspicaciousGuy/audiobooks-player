@@ -22,8 +22,8 @@ Never test with another person's Google Drive files or account.
 - Google identity and Google Drive authorization are separate grants. Drive
   credentials are server-only, encrypted with AES-256-GCM, and revoked before
   their database record is removed.
-- Audio responses require an owned database record. Range streams are capped;
-  full downloads are explicit and never enter the service-worker cache.
+- Audio responses require an owned database record. Only one validated Range is
+  accepted per stream request; audio never enters the service-worker cache.
 - State-changing APIs require the configured application origin and use
   database-backed per-account quotas.
 - Structured operational events accept only allowlisted non-content fields.

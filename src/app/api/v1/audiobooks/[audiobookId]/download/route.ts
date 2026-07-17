@@ -35,6 +35,7 @@ export async function GET(
 
   try {
     const file = await getOwnedStreamFile(
+      access.supabase,
       identifiers.data.audiobookId,
       identifiers.data.fileId,
     );

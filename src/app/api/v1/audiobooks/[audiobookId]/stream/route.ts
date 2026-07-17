@@ -1,8 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
-import { openDriveRangeStream } from "@/features/streaming/driveStream";
-import { parseBoundedRange } from "@/features/streaming/range";
+import {
+  openDriveDownloadStream,
+  openDriveRangeStream,
+} from "@/features/streaming/driveStream";
+import { parseSingleRange } from "@/features/streaming/range";
 import { getOwnedStreamFile } from "@/features/streaming/repository";
 import { problemResponse } from "@/lib/api/problem";
 import { authorizeRateLimitedRequest } from "@/lib/security/apiAccess";
@@ -46,6 +49,7 @@ export async function GET(
 
   try {
     const file = await getOwnedStreamFile(
+      access.supabase,
       identifiers.data.audiobookId,
       identifiers.data.fileId,
     );
@@ -54,18 +58,20 @@ export async function GET(
       return problemResponse("Audio source not found.", 404);
     }
 
-    const range = parseBoundedRange(
-      request.headers.get("range"),
-      file.byteSize,
-    );
+    const rangeHeader = request.headers.get("range");
+    const range = rangeHeader
+      ? parseSingleRange(rangeHeader, file.byteSize)
+      : undefined;
 
-    if (!range) return rangeNotSatisfiable(file.byteSize);
-    const upstream = await openDriveRangeStream(
-      access.identity.id,
-      file,
-      range,
-      request.signal,
-    );
+    if (rangeHeader && !range) return rangeNotSatisfiable(file.byteSize);
+    const upstream = range
+      ? await openDriveRangeStream(
+          access.identity.id,
+          file,
+          range,
+          request.signal,
+        )
+      : await openDriveDownloadStream(access.identity.id, file, request.signal);
 
     if (upstream.status === 404) {
       await upstream.body?.cancel();
@@ -87,14 +93,18 @@ export async function GET(
 
     const contentLength = Number(upstream.headers.get("content-length"));
     const contentRange = upstream.headers.get("content-range");
-    const expectedContentRange = `bytes ${range.start}-${range.end}/${file.byteSize}`;
+    const expectedContentLength = range?.length ?? file.byteSize;
+    const expectedContentRange = range
+      ? `bytes ${range.start}-${range.end}/${file.byteSize}`
+      : null;
+    const expectedStatus = range ? 206 : 200;
 
     if (
-      upstream.status !== 206 ||
+      upstream.status !== expectedStatus ||
       !upstream.body ||
       contentRange !== expectedContentRange ||
       !Number.isFinite(contentLength) ||
-      contentLength !== range.length
+      contentLength !== expectedContentLength
     ) {
       await upstream.body?.cancel();
       return problemResponse(
@@ -108,11 +118,11 @@ export async function GET(
         "accept-ranges": "bytes",
         "cache-control": "no-store, private",
         "content-length": String(contentLength),
-        "content-range": contentRange,
         "content-type": file.mimeType,
+        ...(contentRange ? { "content-range": contentRange } : {}),
         vary: "Cookie",
       },
-      status: 206,
+      status: expectedStatus,
     });
   } catch {
     return problemResponse("The audio stream is temporarily unavailable.", 502);
