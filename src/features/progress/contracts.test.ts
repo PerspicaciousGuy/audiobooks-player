@@ -37,12 +37,14 @@ describe("progress contracts", () => {
       ...CHECKPOINT,
       accepted: true,
       audiobookFileId: CHECKPOINT.audiobookFileId,
+      clientUpdatedAt: "2026-07-15T10:00:00.000+00:00",
       playbackRate: "1.25",
       positionMs: "90000",
       version: "5",
     });
 
     expect(saved).toMatchObject({
+      clientUpdatedAt: "2026-07-15T10:00:00.000+00:00",
       playbackRate: 1.25,
       positionMs: 90_000,
       version: 5,

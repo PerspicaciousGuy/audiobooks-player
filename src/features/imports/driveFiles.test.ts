@@ -39,7 +39,7 @@ describe("Drive file validation", () => {
     expect(result).toMatchObject({
       driveFileId: FILE_ID,
       name: "A Wizard of Earthsea.mp3",
-      reason: "The file is unsupported, unavailable, or cannot be downloaded.",
+      reason: "Google Drive does not allow this file to be downloaded.",
     });
     expect(fetchMock).toHaveBeenCalledOnce();
   });
@@ -89,7 +89,7 @@ describe("Drive file validation", () => {
     });
   });
 
-  it.each(["audio/m4b", "application/mp4", "application/x-m4b"])(
+  it.each(["audio/m4b", "application/mp4", "application/x-m4b", "video/mp4"])(
     "accepts an M4B file reported as %s",
     async (mimeType) => {
       const fetchMock = vi.fn().mockResolvedValue(
@@ -105,10 +105,25 @@ describe("Drive file validation", () => {
       const result = await validateDriveFile(FILE_ID, ACCESS_TOKEN);
 
       expect(isValidatedDriveFile(result)).toBe(true);
-      expect(result).toMatchObject({ mimeType });
+      expect(result).toMatchObject({ mimeType: "audio/mp4" });
       expect(fetchMock).toHaveBeenCalledOnce();
     },
   );
+
+  it("rejects a video MIME type on a non-MP4 audio extension", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(Response.json(metadata({ mimeType: "video/mp4" }))),
+    );
+
+    await expect(
+      validateDriveFile(FILE_ID, ACCESS_TOKEN),
+    ).resolves.toMatchObject({
+      reason: "The file type reported by Google Drive is not supported.",
+    });
+  });
 
   it("rejects a file outside the selected Audiobooks folder", async () => {
     vi.stubGlobal(

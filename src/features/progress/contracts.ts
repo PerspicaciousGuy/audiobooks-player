@@ -14,7 +14,7 @@ export const savedProgressSchema = z.object({
   accepted: z.boolean(),
   audiobookFileId: z.string().uuid().nullable(),
   chapterId: z.string().uuid().nullable(),
-  clientUpdatedAt: z.string().datetime(),
+  clientUpdatedAt: z.string().datetime({ offset: true }),
   isCompleted: z.boolean(),
   playbackRate: z.coerce.number(),
   positionMs: z.coerce.number().int().nonnegative(),

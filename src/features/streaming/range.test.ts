@@ -12,10 +12,13 @@ describe("bounded HTTP ranges", () => {
     });
   });
 
-  it("caps an open-ended range and supports suffix ranges", () => {
-    expect(parseBoundedRange("bytes=100-", 10_000_000)?.length).toBe(
-      MAX_STREAM_CHUNK_BYTES,
-    );
+  it("preserves an open-ended media range and supports suffix ranges", () => {
+    expect(parseBoundedRange("bytes=100-", 10_000_000)).toEqual({
+      end: 9_999_999,
+      header: "bytes=100-9999999",
+      length: 9_999_900,
+      start: 100,
+    });
     expect(parseBoundedRange("bytes=-500", 1_000)).toEqual({
       end: 999,
       header: "bytes=500-999",

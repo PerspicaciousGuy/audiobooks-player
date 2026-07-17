@@ -7,11 +7,14 @@ import { parseId3Metadata } from "./id3";
 
 const MAX_METADATA_BYTES = 1024 * 1024;
 const SUPPORTED_EXTENSIONS = new Set(["aac", "m4a", "m4b", "mp3", "ogg"]);
-const SUPPORTED_APPLICATION_MIME_TYPES = new Set([
+const MP4_AUDIO_EXTENSIONS = new Set(["m4a", "m4b"]);
+const MP4_CONTAINER_MIME_TYPES = new Set([
   "application/mp4",
-  "application/octet-stream",
   "application/x-m4b",
+  "video/mp4",
 ]);
+const GENERIC_BINARY_MIME_TYPE = "application/octet-stream";
+const PLAYBACK_MP4_MIME_TYPE = "audio/mp4";
 
 export function isSupportedDriveAudioFile(
   name: string,
@@ -25,8 +28,28 @@ export function isSupportedDriveAudioFile(
     SUPPORTED_EXTENSIONS.has(extension) &&
     normalizedMimeType &&
     (normalizedMimeType.startsWith("audio/") ||
-      SUPPORTED_APPLICATION_MIME_TYPES.has(normalizedMimeType)),
+      normalizedMimeType === GENERIC_BINARY_MIME_TYPE ||
+      (MP4_AUDIO_EXTENSIONS.has(extension) &&
+        MP4_CONTAINER_MIME_TYPES.has(normalizedMimeType))),
   );
+}
+
+function playbackMimeType(name: string, mimeType: string): string {
+  const extension = name.split(".").pop()?.toLowerCase();
+  const normalizedMimeType = mimeType.split(";", 1)[0]?.trim().toLowerCase();
+
+  if (
+    extension &&
+    MP4_AUDIO_EXTENSIONS.has(extension) &&
+    normalizedMimeType &&
+    (normalizedMimeType.includes("m4b") ||
+      normalizedMimeType === "audio/mp4" ||
+      MP4_CONTAINER_MIME_TYPES.has(normalizedMimeType))
+  ) {
+    return PLAYBACK_MP4_MIME_TYPE;
+  }
+
+  return normalizedMimeType ?? mimeType;
 }
 
 const driveFileSchema = z.object({
@@ -125,16 +148,30 @@ export async function validateDriveFile(
     );
   }
 
-  if (
-    file.trashed ||
-    file.capabilities?.canDownload !== true ||
-    !file.size ||
-    !extension ||
-    !isSupportedDriveAudioFile(file.name, file.mimeType)
-  ) {
+  if (file.trashed) {
+    return reject(driveFileId, "The file is in Google Drive trash.", file.name);
+  }
+
+  if (file.capabilities?.canDownload !== true) {
     return reject(
       driveFileId,
-      "The file is unsupported, unavailable, or cannot be downloaded.",
+      "Google Drive does not allow this file to be downloaded.",
+      file.name,
+    );
+  }
+
+  if (!file.size) {
+    return reject(
+      driveFileId,
+      "Google Drive did not report a downloadable file size.",
+      file.name,
+    );
+  }
+
+  if (!extension || !isSupportedDriveAudioFile(file.name, file.mimeType)) {
+    return reject(
+      driveFileId,
+      "The file type reported by Google Drive is not supported.",
       file.name,
     );
   }
@@ -148,7 +185,7 @@ export async function validateDriveFile(
     driveFileId,
     driveVersion: file.version ?? null,
     md5Checksum: file.md5Checksum ?? null,
-    mimeType: file.mimeType,
+    mimeType: playbackMimeType(file.name, file.mimeType),
     name: file.name,
   };
 }

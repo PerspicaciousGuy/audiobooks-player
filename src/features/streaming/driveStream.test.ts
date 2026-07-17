@@ -26,6 +26,7 @@ const RANGE = {
 beforeEach(() => vi.clearAllMocks());
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
@@ -57,6 +58,34 @@ describe("Drive streaming", () => {
       authorization: "Bearer access-token",
       range: "bytes=0-99",
     });
+  });
+
+  it("clears the Drive header timeout before streaming the response body", async () => {
+    vi.useFakeTimers();
+    vi.mocked(getValidDriveCredentials).mockResolvedValue({
+      accessToken: "access-token",
+      expiresAt: "2026-07-15T11:00:00.000Z",
+      refreshToken: "refresh-token",
+      scope: ["https://www.googleapis.com/auth/drive.file"],
+      tokenType: "Bearer",
+    });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response("audio", { status: 206 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await openDriveRangeStream(
+      "user-id",
+      FILE,
+      RANGE,
+      new AbortController().signal,
+    );
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const signal = init.signal as AbortSignal;
+    await vi.advanceTimersByTimeAsync(20_000);
+
+    expect(signal.aborted).toBe(false);
   });
 
   it("refreshes once and retries when Drive rejects the access token", async () => {

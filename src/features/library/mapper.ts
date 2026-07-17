@@ -32,7 +32,7 @@ export const progressRowSchema = z.object({
   audiobook_id: z.string().uuid(),
   audiobook_file_id: z.string().uuid().nullable(),
   chapter_id: z.string().uuid().nullable(),
-  client_updated_at: z.string().datetime(),
+  client_updated_at: z.string().datetime({ offset: true }),
   is_completed: z.boolean(),
   playback_rate: z.coerce.number(),
   position_ms: z.number(),

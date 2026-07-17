@@ -51,7 +51,7 @@ export function parseBoundedRange(
   const end = Math.min(
     requestedEnd,
     fileSize - 1,
-    start + MAX_STREAM_CHUNK_BYTES - 1,
+    endText ? start + MAX_STREAM_CHUNK_BYTES - 1 : fileSize - 1,
   );
   return {
     end,

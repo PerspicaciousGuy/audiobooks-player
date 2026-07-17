@@ -20,14 +20,21 @@ async function requestDriveRange(
   accessToken: string,
   requestSignal: AbortSignal,
 ): Promise<Response> {
-  return fetch(mediaUrl(file.driveFileId), {
-    cache: "no-store",
-    headers: {
-      authorization: `Bearer ${accessToken}`,
-      range: range.header,
-    },
-    signal: AbortSignal.any([requestSignal, AbortSignal.timeout(20_000)]),
-  });
+  const timeoutController = new AbortController();
+  const timeout = setTimeout(() => timeoutController.abort(), 20_000);
+
+  try {
+    return await fetch(mediaUrl(file.driveFileId), {
+      cache: "no-store",
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+        range: range.header,
+      },
+      signal: AbortSignal.any([requestSignal, timeoutController.signal]),
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export async function openDriveRangeStream(

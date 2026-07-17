@@ -54,37 +54,46 @@ user's browser profile.
 
 ## Last Action
 
-Replaced recursive Drive folder scanning with the approved least-privilege
-flow. Users still select and retain one exact `Audiobooks` folder, then open a
-multi-select Picker rooted at that folder to authorize up to 25 files. Preview
-and final import both re-fetch Drive metadata and reject files whose parent is
-not the saved folder. The implementation keeps `drive.file`; no scope,
-credential, migration, or dependency change was made.
+Fixed the hosted M4B import, Drive playback, and progress-response failures.
+Drive files with an M4B or M4A extension now accept Google Drive's `video/mp4`
+classification and normalize MP4-container aliases to `audio/mp4` for browser
+playback. Import rejection messages now identify trash, download permissions,
+missing size, and unsupported type separately.
 
-Expanded supported M4B MIME handling to accept `audio/*`, `application/mp4`,
-`application/x-m4b`, and generic binary metadata when the filename has an
-approved audio extension. Added regression coverage for three common M4B MIME
-aliases and the folder-parent boundary. Authenticated Supabase home/onboarding
-and idle-player surfaces now use owned data or an empty state; mock books remain
-available only when the application is in preview mode.
+The Range proxy now preserves browser open-ended requests instead of ending the
+response after 4 MiB, while retaining the chunk limit for explicitly bounded
+requests. Its header timeout is cleared once Google responds so it cannot abort
+an active response body. Persisted progress schemas now accept PostgreSQL's
+offset-form timestamps, eliminating the confirmed progress `PUT` 502. No OAuth
+scope, credential, environment, migration, dependency, or user file changed.
 
 ## In Progress
 
-None. The explicit Picker import and authenticated mock-data boundary are ready
-for hosted verification after deployment.
+None. The import, stream, and progress fixes pass the complete local verifier
+and are ready for Koyeb deployment.
 
 ## Pending
 
-- Deploy the explicit-file Picker build and verify a real M4B direct child from
-  selection through review, import, streaming, and playback.
+- Deploy this build, reselect the previously rejected M4B, and verify both the
+  M4B and existing MP3 through real hosted playback and seeking.
 - Complete the remaining hosted progress, bookmark, reconnect/revoke,
   account-deletion, PWA, and physical-device evidence flows.
 
 ## Verification
 
-- Formatting, ESLint, strict TypeScript, all 76 tests in 26 files, and the
-  29-route production build pass after the explicit-file import change.
-- Focused import tests pass for explicit file/folder contracts, three M4B MIME
+- `npm run verify` passes: formatting, ESLint, strict TypeScript, all 80 tests in
+  27 files, the 29-route production build, and production HTTP smoke.
+- A read-only query confirmed PostgreSQL returns the affected progress value as
+  `2026-07-17T03:36:52.798+00:00`; regression tests now cover that exact shape
+  in both the progress response and library row contracts.
+- A read-only probe of the imported MP3 confirmed Google Drive returns the
+  requested bytes with `206`, the exact `Content-Range`, `audio/mpeg`, and the
+  expected total size. This isolated playback failure to the app proxy rather
+  than Drive authorization or the source file.
+- Focused regressions cover Drive's `video/mp4` M4B classification, safe MP4
+  extension matching, browser-compatible MIME normalization, open-ended media
+  ranges, and clearing the header timeout before streaming the body.
+- Focused import tests pass for explicit file/folder contracts, four M4B MIME
   aliases, unsupported-file filtering, direct-parent enforcement, and the
   25-file safety limit.
 - Linked Supabase migration history includes
@@ -178,21 +187,20 @@ Follow `docs/DEPLOYMENT.md` for the release order,
   subfolders must be moved directly into `Audiobooks` for this first explicit
   selection flow; larger-library batching and nested-folder authorization are
   not implemented yet.
-- Real `drive.file` M4B import and playback still require the hosted,
-  authenticated Google account check after Koyeb deploys this build.
+- The new `video/mp4` M4B path and open-ended Range response still require the
+  hosted, authenticated Google account check after Koyeb deploys this build.
 - `IMPLEMENTATION_PLAN.md` exceeds the generic 500-line guideline but remains a
   single cohesive planning artifact.
 
 ## Files Status
 
-- Created: no files in the latest action. Existing folder-selection routes,
-  Drive/import helpers and tests, and migration
-  `20260717012455_add_drive_audiobooks_folder.sql` remain in place.
-- Modified: Drive Picker/import UI, Picker types, import client/contracts/routes
-  and validation tests; authenticated home/onboarding/player mock gating;
-  README, deployment/OAuth/privacy/product copy; and this handoff.
+- Created: `src/features/library/mapper.test.ts` for the persisted Postgres
+  timestamp regression.
+- Modified: Drive file validation and tests; progress and library timestamp
+  contracts; Range parsing and tests; Drive streaming timeout behavior and
+  tests; and this handoff.
 - Currently Being Edited: none after verification.
-- Planned to Edit: only targeted findings from the hosted explicit-file import and
+- Planned to Edit: only targeted findings from hosted M4B/MP3 playback and the
   remaining device release checks.
 - Untouched: `.env`, secret values, existing migration contents, imported book
   records, and user Google Drive files.
