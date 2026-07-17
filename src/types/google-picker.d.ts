@@ -11,6 +11,7 @@ declare global {
         DocsView: new () => {
           setMimeTypes: (mimeTypes: string) => unknown;
           setIncludeFolders: (included: boolean) => unknown;
+          setParent: (parentId: string) => unknown;
           setSelectFolderEnabled: (enabled: boolean) => unknown;
         };
         Feature: { MULTISELECT_ENABLED: string };

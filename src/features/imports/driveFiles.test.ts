@@ -12,6 +12,7 @@ function metadata(overrides: Record<string, unknown> = {}) {
     md5Checksum: "checksum",
     mimeType: "audio/mpeg",
     name: "A Wizard of Earthsea.mp3",
+    parents: ["audiobooks-folder-id"],
     size: "1024",
     trashed: false,
     version: "7",
@@ -85,6 +86,40 @@ describe("Drive file validation", () => {
     await expect(validateDriveFile(FILE_ID, ACCESS_TOKEN)).resolves.toEqual({
       driveFileId: FILE_ID,
       reason: "Drive metadata was incomplete.",
+    });
+  });
+
+  it.each(["audio/m4b", "application/mp4", "application/x-m4b"])(
+    "accepts an M4B file reported as %s",
+    async (mimeType) => {
+      const fetchMock = vi.fn().mockResolvedValue(
+        Response.json(
+          metadata({
+            mimeType,
+            name: "The Left Hand of Darkness.m4b",
+          }),
+        ),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+
+      const result = await validateDriveFile(FILE_ID, ACCESS_TOKEN);
+
+      expect(isValidatedDriveFile(result)).toBe(true);
+      expect(result).toMatchObject({ mimeType });
+      expect(fetchMock).toHaveBeenCalledOnce();
+    },
+  );
+
+  it("rejects a file outside the selected Audiobooks folder", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(Response.json(metadata())),
+    );
+
+    await expect(
+      validateDriveFile(FILE_ID, ACCESS_TOKEN, "another-folder-id"),
+    ).resolves.toMatchObject({
+      reason: "The file is not directly inside the selected Audiobooks folder.",
     });
   });
 });

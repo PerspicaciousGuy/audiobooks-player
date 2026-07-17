@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import BookCover from "@/components/library/BookCover";
 import ActionLink from "@/components/ui/ActionLink";
 import Icon from "@/components/ui/Icon";
+import { getAuthenticatedIdentity } from "@/features/auth/session";
 import { environment } from "@/lib/config/environment";
 import { MOCK_AUDIOBOOKS } from "@/lib/mock/library";
 
@@ -37,7 +38,8 @@ export default async function OnboardingPage({
   searchParams,
 }: OnboardingPageProps) {
   const { drive } = await searchParams;
-  const previewBook = MOCK_AUDIOBOOKS[1];
+  const identity = await getAuthenticatedIdentity();
+  const previewBook = identity ? undefined : MOCK_AUDIOBOOKS[1];
   const isDriveEnabled = environment.driveIntegrationMode === "google";
 
   return (
@@ -101,8 +103,8 @@ export default async function OnboardingPage({
             </h2>
             <p className="text-ink-muted max-w-2xl leading-relaxed">
               Quiet Library will ask you to select a folder named Audiobooks
-              through Google Picker. It scans only supported audio inside that
-              folder and its subfolders.
+              through Google Picker. You then explicitly choose the audiobook
+              files inside it that the app may access.
             </p>
           </div>
           <ul className="flex flex-col gap-3 text-sm">

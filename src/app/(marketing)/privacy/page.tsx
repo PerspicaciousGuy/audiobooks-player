@@ -17,10 +17,10 @@ export default function PrivacyPage() {
       <section>
         <h2>Your audio stays yours</h2>
         <p>
-          Quiet Library scans only the Google Drive folder you explicitly select
-          and streams supported audio found there. Source audio is not copied
-          into Quiet Library server storage. Offline copies remain on the device
-          where you requested them.
+          Quiet Library opens the Google Drive folder you explicitly select and
+          streams only the audiobook files you choose there. Source audio is not
+          copied into Quiet Library server storage. Offline copies remain on the
+          device where you requested them.
         </p>
       </section>
       <section>

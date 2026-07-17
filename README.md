@@ -13,8 +13,8 @@ live-provider verification. The repository includes the responsive visual
 shell, real library search and filters, a mobile account menu, synced playback
 and theme preferences, editable book metadata, RLS-backed Supabase sessions,
 separate secure Drive authorization, explicit-action Google Picker loading,
-server-side Drive validation, one-time `Audiobooks` folder selection, recursive
-folder scanning, bounded ID3 metadata/chapter parsing, editable file grouping,
+server-side Drive validation, one-time `Audiobooks` folder selection, explicit
+multi-file Picker access, bounded ID3 metadata/chapter parsing, editable file grouping,
 duplicate handling, and a transactional import into the real
 library. The shared player uses one audio element, an authenticated
 bounded-Range proxy, multi-file continuation, chapter jumps, Media Session,
@@ -100,24 +100,24 @@ must never be committed.
 
 ## Routes
 
-| Route                           | Current purpose                                                |
-| ------------------------------- | -------------------------------------------------------------- |
-| `/`                             | Responsive public landing page                                 |
-| `/privacy`, `/terms`            | Privacy model and terms previews                               |
-| `/auth/error`                   | Safe authentication failure state                              |
-| `/auth/sign-in`                 | Preview or Supabase Google identity sign-in                    |
-| `/auth/callback`                | Supabase PKCE session exchange                                 |
-| `/auth/drive/start`             | User-bound Google Drive authorization start                    |
-| `/auth/drive/callback`          | Scope validation and encrypted credential persistence          |
-| `/app`                          | Continue listening and recent-book home                        |
-| `/app/onboarding`               | Drive connection and first-import preview                      |
-| `/app/import`                   | Folder selection, recursive scan, review, and confirmed import |
-| `/app/library`                  | Search/filter library shell and previewable collection states  |
-| `/app/audiobooks/[audiobookId]` | Book detail, chapters, bookmarks, and expanded player shell    |
-| `/app/offline`                  | Device downloads, offline playback, and storage management     |
-| `/offline`                      | Public branded offline fallback and device-library access      |
-| `/app/settings`                 | Playback, appearance, Drive, and account settings              |
-| `/health`                       | Unauthenticated, non-cached process health response            |
+| Route                           | Current purpose                                                      |
+| ------------------------------- | -------------------------------------------------------------------- |
+| `/`                             | Responsive public landing page                                       |
+| `/privacy`, `/terms`            | Privacy model and terms previews                                     |
+| `/auth/error`                   | Safe authentication failure state                                    |
+| `/auth/sign-in`                 | Preview or Supabase Google identity sign-in                          |
+| `/auth/callback`                | Supabase PKCE session exchange                                       |
+| `/auth/drive/start`             | User-bound Google Drive authorization start                          |
+| `/auth/drive/callback`          | Scope validation and encrypted credential persistence                |
+| `/app`                          | Continue listening and recent-book home                              |
+| `/app/onboarding`               | Drive connection and first-import preview                            |
+| `/app/import`                   | Folder selection, explicit file choice, review, and confirmed import |
+| `/app/library`                  | Search/filter library shell and previewable collection states        |
+| `/app/audiobooks/[audiobookId]` | Book detail, chapters, bookmarks, and expanded player shell          |
+| `/app/offline`                  | Device downloads, offline playback, and storage management           |
+| `/offline`                      | Public branded offline fallback and device-library access            |
+| `/app/settings`                 | Playback, appearance, Drive, and account settings                    |
+| `/health`                       | Unauthenticated, non-cached process health response                  |
 
 Authenticated application APIs currently include
 `GET /api/v1/library`, `GET/PATCH /api/v1/audiobooks/[audiobookId]`,

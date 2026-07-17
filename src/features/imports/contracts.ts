@@ -5,7 +5,7 @@ import {
   selectedDriveFolderInputSchema,
 } from "@/features/drive/contracts";
 
-export const selectedDriveFilesSchema = z.object({
+export const selectedDriveFilesSchema = selectedDriveFolderInputSchema.extend({
   fileIds: z
     .array(driveItemIdSchema)
     .min(1)
@@ -13,10 +13,7 @@ export const selectedDriveFilesSchema = z.object({
     .refine((ids) => new Set(ids).size === ids.length, "Duplicate file IDs."),
 });
 
-export const importPreviewSourceSchema = z.union([
-  selectedDriveFilesSchema,
-  selectedDriveFolderInputSchema,
-]);
+export const importPreviewSourceSchema = selectedDriveFilesSchema;
 
 export const importGroupInputSchema = z.object({
   author: z.string().trim().max(300).default(""),

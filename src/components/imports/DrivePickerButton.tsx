@@ -9,13 +9,25 @@ import {
 
 const PICKER_SCRIPT_ID = "google-picker-api";
 
-interface DrivePickerButtonProps {
+interface DrivePickerCommonProps {
   apiKey: string;
   disabled?: boolean;
-  hasSelectedFolder: boolean;
-  onFolderPicked: (folder: SelectedDriveFolder) => Promise<void>;
   projectNumber: string;
 }
+
+type DrivePickerButtonProps = DrivePickerCommonProps &
+  (
+    | {
+        hasSelectedFolder: boolean;
+        mode: "folder";
+        onFolderPicked: (folder: SelectedDriveFolder) => Promise<void>;
+      }
+    | {
+        folder: SelectedDriveFolder;
+        mode: "files";
+        onFilesPicked: (fileIds: string[]) => Promise<void>;
+      }
+  );
 
 function loadPickerApi(): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -63,9 +75,8 @@ async function fetchPickerToken(): Promise<string> {
 export default function DrivePickerButton({
   apiKey,
   disabled = false,
-  hasSelectedFolder,
-  onFolderPicked,
   projectNumber,
+  ...selection
 }: DrivePickerButtonProps) {
   const [isOpening, setIsOpening] = useState(false);
   const [error, setError] = useState<string>();
@@ -86,21 +97,49 @@ export default function DrivePickerButton({
       }
 
       const view = new pickerApi.DocsView();
-      view.setMimeTypes(GOOGLE_DRIVE_FOLDER_MIME_TYPE);
-      view.setIncludeFolders(true);
-      view.setSelectFolderEnabled(true);
-      const picker = new pickerApi.PickerBuilder()
-        .addView(view)
+      const isFolderPicker = selection.mode === "folder";
+
+      if (isFolderPicker) {
+        view.setMimeTypes(GOOGLE_DRIVE_FOLDER_MIME_TYPE);
+        view.setIncludeFolders(true);
+        view.setSelectFolderEnabled(true);
+      } else {
+        view.setParent(selection.folder.id);
+        view.setIncludeFolders(false);
+        view.setSelectFolderEnabled(false);
+      }
+
+      let builder = new pickerApi.PickerBuilder().addView(view);
+
+      if (!isFolderPicker) {
+        builder = builder.enableFeature(pickerApi.Feature.MULTISELECT_ENABLED);
+      }
+
+      const picker = builder
         .setAppId(projectNumber)
         .setOAuthToken(accessToken)
         .setDeveloperKey(apiKey)
         .setOrigin(window.location.origin)
         .setCallback((data) => {
           if (data.action !== pickerApi.Action.PICKED) return;
-          const folder = data.docs?.[0];
+          const documents = data.docs ?? [];
 
-          if (folder?.id && folder.name) {
-            void onFolderPicked({ id: folder.id, name: folder.name });
+          if (selection.mode === "folder") {
+            const folder = documents[0];
+
+            if (folder?.id && folder.name) {
+              void selection.onFolderPicked({
+                id: folder.id,
+                name: folder.name,
+              });
+            }
+            return;
+          }
+
+          const fileIds = documents.flatMap(({ id }) => (id ? [id] : []));
+
+          if (fileIds.length > 0) {
+            void selection.onFilesPicked(fileIds);
           }
         })
         .build();
@@ -124,9 +163,11 @@ export default function DrivePickerButton({
       >
         {isOpening
           ? "Opening Google Picker…"
-          : hasSelectedFolder
-            ? "Change Audiobooks folder"
-            : "Choose Audiobooks folder"}
+          : selection.mode === "files"
+            ? "Choose audiobook files"
+            : selection.hasSelectedFolder
+              ? "Change Audiobooks folder"
+              : "Choose Audiobooks folder"}
       </button>
       {error ? (
         <p className="text-danger text-sm" role="alert">

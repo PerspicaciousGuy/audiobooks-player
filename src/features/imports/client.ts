@@ -22,11 +22,12 @@ export async function selectAudiobooksFolder(
   return payload.folder;
 }
 
-export async function previewAudiobooksFolder(
+export async function previewSelectedDriveFiles(
   folderId: string,
+  fileIds: string[],
 ): Promise<ImportPreviewResponse> {
   const response = await fetch("/api/v1/imports/preview", {
-    body: JSON.stringify({ folderId }),
+    body: JSON.stringify({ fileIds, folderId }),
     headers: { "content-type": "application/json" },
     method: "POST",
   });
@@ -36,7 +37,7 @@ export async function previewAudiobooksFolder(
 
   if (!response.ok) {
     throw new Error(
-      payload.detail ?? "The Audiobooks folder could not be reviewed.",
+      payload.detail ?? "The selected audiobook files could not be reviewed.",
     );
   }
 

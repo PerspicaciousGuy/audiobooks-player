@@ -66,8 +66,8 @@ makes stored credentials unreadable.
   service-worker headers.
 - Verify sign-in, session refresh, sign-out, Drive consent, reconnect, and
   revoke with a test Google account.
-- Select a folder named `Audiobooks`, scan supported and rejected files from a
-  nested folder, and confirm no source file is modified.
+- Select a folder named `Audiobooks`, explicitly choose supported and rejected
+  direct-child files, and confirm no source file is modified.
 - Seek near the start and end of a large file and confirm exact `206` ranges.
 - Exercise multi-file playback, two-session progress conflicts, and bookmarks.
 - Install the PWA, download a complete book, enter airplane mode, and play every

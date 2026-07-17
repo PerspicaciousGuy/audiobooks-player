@@ -27,8 +27,8 @@ user's browser profile.
 - Phase 2 provides Supabase SSR authentication, normalized/RLS-protected data,
   and a separate user-bound Drive OAuth flow with PKCE, exact scopes, encrypted
   credentials, reconnect, and revoke-before-delete.
-- Phase 3 provides one-time `Audiobooks` folder selection through Google
-  Picker, recursive folder-only scanning, server-side Drive validation, bounded
+- Phase 3 provides one-time `Audiobooks` folder selection followed by explicit
+  multi-file Picker authorization, server-side parent/MIME validation, bounded
   ID3/chapter parsing, editable grouping, duplicate checks, transactional
   import, and real library reads.
 - Phase 4 provides an authenticated owned-file Range proxy and one shared audio
@@ -54,56 +54,39 @@ user's browser profile.
 
 ## Last Action
 
-Diagnosed the remaining hosted Google Picker error without changing application
-or secret files. The implementation already supplies the developer key, Cloud
-project number, OAuth token, and current origin in the documented Picker flow.
-The local environment values have the expected key/project formats with no
-quotes or surrounding whitespace.
+Replaced recursive Drive folder scanning with the approved least-privilege
+flow. Users still select and retain one exact `Audiobooks` folder, then open a
+multi-select Picker rooted at that folder to authorize up to 25 files. Preview
+and final import both re-fetch Drive metadata and reject files whose parent is
+not the saved folder. The implementation keeps `drive.file`; no scope,
+credential, migration, or dependency change was made.
 
-A redacted Google API probe initially returned `403 PERMISSION_DENIED` with
-Drive file listing explicitly blocked. After Google Drive API was added to the
-same browser key, the probe changed to the expected file-permission response,
-confirming that Google now accepts the key and both API restrictions. The
-embedded Picker still shows its generic developer-key screen, so Chrome's
-blocked third-party-cookie/extension path is now the active check. The active
-Chrome profile is not available to this agent for direct inspection.
-
-After third-party cookies were allowed, Picker opened and saved the selected
-`Audiobooks` folder. Its recursive scan returned no files even though the folder
-contains an M4B. Review found that the current OAuth scope is `drive.file`,
-which grants per-file access to files explicitly opened or shared through
-Picker; selecting a folder does not grant blanket access to its pre-existing
-children. The detector also lacks some valid M4B MIME aliases, but MIME
-expansion alone cannot make an unauthorized child visible to the Drive list
-call.
+Expanded supported M4B MIME handling to accept `audio/*`, `application/mp4`,
+`application/x-m4b`, and generic binary metadata when the filename has an
+approved audio extension. Added regression coverage for three common M4B MIME
+aliases and the folder-parent boundary. Authenticated Supabase home/onboarding
+and idle-player surfaces now use owned data or an empty state; mock books remain
+available only when the application is in preview mode.
 
 ## In Progress
 
-The application code and folder migration are on `main`, Google accepts the
-configured browser key, and Picker works with third-party cookies allowed. Work
-is paused before changing the import model: retain least-privilege `drive.file`
-with explicit multi-file selection, or request broader read-only Drive access
-for automatic recursive folder scanning. Mock content also still needs to be
-limited to preview mode after that choice.
+None. The explicit Picker import and authenticated mock-data boundary are ready
+for hosted verification after deployment.
 
 ## Pending
 
-- Choose the Drive access model: recommended explicit multi-file Picker
-  selection under `drive.file`, or broader read-only Drive access with OAuth
-  verification/privacy implications for automatic folder scanning.
-- Expand accepted M4B MIME aliases and add regression tests after the access
-  model is chosen.
-- Keep mock books/player content only in preview mode; authenticated Supabase
-  users should see owned books or an empty state.
+- Deploy the explicit-file Picker build and verify a real M4B direct child from
+  selection through review, import, streaming, and playback.
 - Complete the remaining hosted progress, bookmark, reconnect/revoke,
   account-deletion, PWA, and physical-device evidence flows.
 
 ## Verification
 
-- `npm run verify`: formatting, ESLint, strict TypeScript, 71 tests in 26 files,
-  the 29-route production build, and the production HTTP smoke check pass.
-- Focused folder/import tests pass for exact-name validation, recursive nested
-  audio discovery, unsupported-file filtering, and the 25-file safety limit.
+- Formatting, ESLint, strict TypeScript, all 76 tests in 26 files, and the
+  29-route production build pass after the explicit-file import change.
+- Focused import tests pass for explicit file/folder contracts, three M4B MIME
+  aliases, unsupported-file filtering, direct-parent enforcement, and the
+  25-file safety limit.
 - Linked Supabase migration history includes
   `20260717012455_add_drive_audiobooks_folder`; direct catalog queries confirm
   both columns and all three constraints. Security advisors retain only the two
@@ -191,24 +174,25 @@ Follow `docs/DEPLOYMENT.md` for the release order,
   hard `404` requirement is added.
 - Browser codec support varies, especially for OGG and some audiobook formats;
   final capability behavior requires representative devices and files.
-- A single folder scan is intentionally limited to 25 supported audio files and
-  100 folders. Larger-library batching is not implemented yet.
-- Real `drive.file` folder traversal and playback still require the hosted,
-  authenticated Google account check after Koyeb receives the project number.
+- A single Picker/import batch is intentionally limited to 25 files. Files in
+  subfolders must be moved directly into `Audiobooks` for this first explicit
+  selection flow; larger-library batching and nested-folder authorization are
+  not implemented yet.
+- Real `drive.file` M4B import and playback still require the hosted,
+  authenticated Google account check after Koyeb deploys this build.
 - `IMPLEMENTATION_PLAN.md` exceeds the generic 500-line guideline but remains a
   single cohesive planning artifact.
 
 ## Files Status
 
-- Created: the folder-selection route, Drive folder contracts/scanner/tests,
-  import client helper and selected-folder panel, plus migration
-  `20260717012455_add_drive_audiobooks_folder.sql` and its rollback.
-- Modified: `.env.example`, `README.md`, Drive deployment/OAuth docs, import,
-  onboarding, home, settings, privacy, and marketing copy/components; Drive
-  repository, import contracts/validation/preview route, Picker types and
-  environment validation; the initial-schema pgTAP test; and this handoff.
+- Created: no files in the latest action. Existing folder-selection routes,
+  Drive/import helpers and tests, and migration
+  `20260717012455_add_drive_audiobooks_folder.sql` remain in place.
+- Modified: Drive Picker/import UI, Picker types, import client/contracts/routes
+  and validation tests; authenticated home/onboarding/player mock gating;
+  README, deployment/OAuth/privacy/product copy; and this handoff.
 - Currently Being Edited: none after verification.
-- Planned to Edit: only targeted findings from the hosted folder import and
+- Planned to Edit: only targeted findings from the hosted explicit-file import and
   remaining device release checks.
 - Untouched: `.env`, secret values, existing migration contents, imported book
   records, and user Google Drive files.

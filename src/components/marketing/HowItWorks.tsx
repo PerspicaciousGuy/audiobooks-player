@@ -18,7 +18,7 @@ const STEPS: readonly Step[] = [
   },
   {
     description:
-      "Create an Audiobooks folder, select it once with Google Picker, and scan only that folder and its subfolders.",
+      "Create an Audiobooks folder, select it once, then explicitly choose the audiobook files the app may access.",
     icon: "upload",
     number: "02",
     title: "Choose your folder",

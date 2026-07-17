@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { getValidDriveCredentials } from "@/features/drive/access";
+import { getDriveConnection } from "@/features/drive/repository";
 import { confirmImportSchema } from "@/features/imports/contracts";
 import {
   commitValidatedImport,
@@ -35,9 +36,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const fileIds = parsed.data.groups.flatMap((group) => group.fileIds);
     const credentials = await getValidDriveCredentials(access.identity.id);
+    const connection = await getDriveConnection(access.identity.id);
+
+    if (!connection?.selectedFolder) {
+      return problemResponse("Choose the Audiobooks folder again.", 409);
+    }
+
     const validation = await validateSelectedDriveFiles(
       fileIds,
       credentials.accessToken,
+      connection.selectedFolder.id,
     );
 
     if (validation.rejected.length > 0) {

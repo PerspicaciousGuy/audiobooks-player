@@ -36,8 +36,8 @@ export default async function ImportPage() {
         </div>
         <p className="text-ink-muted max-w-2xl leading-relaxed">
           Create a folder named Audiobooks in Google Drive, select it once, and
-          Quiet Library will scan supported audio in that folder and its
-          subfolders. Source files are never changed.
+          use Google Picker to choose up to 25 audiobook files directly inside
+          it. Source files are never changed.
         </p>
       </header>
 

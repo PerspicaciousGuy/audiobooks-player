@@ -11,16 +11,28 @@ const FILE_ID = "drive-file-id-0001";
 describe("import API contracts", () => {
   it("rejects repeated Picker file IDs", () => {
     expect(
-      selectedDriveFilesSchema.safeParse({ fileIds: [FILE_ID, FILE_ID] })
-        .success,
+      selectedDriveFilesSchema.safeParse({
+        fileIds: [FILE_ID, FILE_ID],
+        folderId: "audiobooks-folder-id",
+      }).success,
     ).toBe(false);
   });
 
-  it("accepts a selected Audiobooks folder ID", () => {
+  it("accepts explicitly selected files from the Audiobooks folder", () => {
     expect(
-      importPreviewSourceSchema.safeParse({ folderId: "audiobooks-folder-id" })
-        .success,
+      importPreviewSourceSchema.safeParse({
+        fileIds: [FILE_ID],
+        folderId: "audiobooks-folder-id",
+      }).success,
     ).toBe(true);
+  });
+
+  it("does not accept a folder scan without explicit file selection", () => {
+    expect(
+      importPreviewSourceSchema.safeParse({
+        folderId: "audiobooks-folder-id",
+      }).success,
+    ).toBe(false);
   });
 
   it("accepts reviewed metadata without trusting file metadata", () => {

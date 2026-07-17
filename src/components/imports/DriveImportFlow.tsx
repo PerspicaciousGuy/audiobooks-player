@@ -9,7 +9,7 @@ import type {
 } from "@/features/imports/contracts";
 import type { SelectedDriveFolder } from "@/features/drive/contracts";
 import {
-  previewAudiobooksFolder,
+  previewSelectedDriveFiles,
   selectAudiobooksFolder,
 } from "@/features/imports/client";
 
@@ -35,8 +35,11 @@ export default function DriveImportFlow({
   const [isWorking, setIsWorking] = useState(false);
   const [error, setError] = useState<string>();
 
-  async function requestPreview(folderId: string): Promise<void> {
-    const payload = await previewAudiobooksFolder(folderId);
+  async function requestPreview(
+    folderId: string,
+    fileIds: string[],
+  ): Promise<void> {
+    const payload = await previewSelectedDriveFiles(folderId, fileIds);
 
     setPreview(payload);
     setGroups(payload.groups);
@@ -51,7 +54,8 @@ export default function DriveImportFlow({
     try {
       const selectedFolder = await selectAudiobooksFolder(pickedFolder.id);
       setFolder(selectedFolder);
-      await requestPreview(selectedFolder.id);
+      setPreview(undefined);
+      setGroups([]);
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -63,18 +67,18 @@ export default function DriveImportFlow({
     }
   }
 
-  async function handleFolderScan(): Promise<void> {
+  async function handleFilesPicked(fileIds: string[]): Promise<void> {
     if (!folder) return;
     setIsWorking(true);
     setError(undefined);
 
     try {
-      await requestPreview(folder.id);
+      await requestPreview(folder.id, fileIds);
     } catch (caught) {
       setError(
         caught instanceof Error
           ? caught.message
-          : "The Audiobooks folder could not be reviewed.",
+          : "The selected audiobook files could not be reviewed.",
       );
     } finally {
       setIsWorking(false);
@@ -124,17 +128,22 @@ export default function DriveImportFlow({
 
   return (
     <div className="flex flex-col gap-8">
+      {folder ? <SelectedDriveFolderPanel folder={folder} /> : null}
       {folder ? (
-        <SelectedDriveFolderPanel
+        <DrivePickerButton
+          apiKey={apiKey}
+          disabled={isWorking}
           folder={folder}
-          isScanning={isWorking}
-          onScan={handleFolderScan}
+          mode="files"
+          onFilesPicked={handleFilesPicked}
+          projectNumber={projectNumber}
         />
       ) : null}
       <DrivePickerButton
         apiKey={apiKey}
         disabled={isWorking}
         hasSelectedFolder={Boolean(folder)}
+        mode="folder"
         onFolderPicked={handleFolderPicked}
         projectNumber={projectNumber}
       />
@@ -171,7 +180,8 @@ export default function DriveImportFlow({
       preview.rejected.length === 0 &&
       preview.duplicateFileIds.length === 0 ? (
         <p className="border-border bg-paper-elevated rounded-control border p-4 text-sm">
-          No supported audio files were found in this Audiobooks folder.
+          None of the selected files could be added. Review any file-specific
+          messages above, then choose files again.
         </p>
       ) : null}
       {groups.length > 0 ? (

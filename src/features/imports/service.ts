@@ -13,6 +13,7 @@ export interface ValidatedSelection {
 export async function validateSelectedDriveFiles(
   fileIds: string[],
   accessToken: string,
+  folderId?: string,
 ): Promise<ValidatedSelection> {
   const accepted: ValidatedDriveFile[] = [];
   const rejected: RejectedDriveFile[] = [];
@@ -20,7 +21,7 @@ export async function validateSelectedDriveFiles(
   for (let index = 0; index < fileIds.length; index += VALIDATION_CONCURRENCY) {
     const batch = fileIds.slice(index, index + VALIDATION_CONCURRENCY);
     const results = await Promise.all(
-      batch.map((fileId) => validateDriveFile(fileId, accessToken)),
+      batch.map((fileId) => validateDriveFile(fileId, accessToken, folderId)),
     );
 
     results.forEach((file) => {

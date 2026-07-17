@@ -5,8 +5,14 @@ import Icon from "@/components/ui/Icon";
 import { formatPlayerTime, usePlayer } from "@/features/player/context";
 import { CURRENT_AUDIOBOOK } from "@/lib/mock/library";
 
-export default function NowPlayingBar() {
+interface NowPlayingBarProps {
+  showIdlePreview: boolean;
+}
+
+export default function NowPlayingBar({ showIdlePreview }: NowPlayingBarProps) {
   const player = usePlayer();
+  if (!player.audiobook && !showIdlePreview) return null;
+
   const audiobook = player.audiobook ?? CURRENT_AUDIOBOOK;
   const isActive = Boolean(player.audiobook);
   const progress =

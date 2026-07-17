@@ -2,31 +2,23 @@ import type { SelectedDriveFolder } from "@/features/drive/contracts";
 
 interface SelectedDriveFolderPanelProps {
   folder: SelectedDriveFolder;
-  isScanning: boolean;
-  onScan: () => Promise<void>;
 }
 
 export default function SelectedDriveFolderPanel({
   folder,
-  isScanning,
-  onScan,
 }: SelectedDriveFolderPanelProps) {
   return (
     <section className="border-border bg-paper-elevated rounded-card flex flex-col gap-4 border p-5 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <p className="text-sm font-semibold">{folder.name}</p>
         <p className="text-ink-muted mt-1 text-xs">
-          Only supported audio inside this folder and its subfolders is scanned.
+          Google Picker opens here. Select up to 25 audiobook files directly
+          inside this folder.
         </p>
       </div>
-      <button
-        className="border-border hover:border-action rounded-control min-h-11 px-4 text-sm font-semibold disabled:opacity-60"
-        disabled={isScanning}
-        onClick={() => void onScan()}
-        type="button"
-      >
-        {isScanning ? "Scanning…" : "Scan Audiobooks folder"}
-      </button>
+      <span className="text-action-strong text-sm font-semibold">
+        Folder selected
+      </span>
     </section>
   );
 }

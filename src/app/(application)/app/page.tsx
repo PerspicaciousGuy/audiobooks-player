@@ -3,22 +3,43 @@ import Link from "next/link";
 
 import BookCard from "@/components/library/BookCard";
 import BookCover from "@/components/library/BookCover";
+import CollectionState from "@/components/states/CollectionState";
 import ActionLink from "@/components/ui/ActionLink";
 import Icon from "@/components/ui/Icon";
 import SectionHeading from "@/components/ui/SectionHeading";
-import { CURRENT_AUDIOBOOK, MOCK_AUDIOBOOKS } from "@/lib/mock/library";
+import { getOwnedAudiobooks } from "@/features/library/repository";
+import { MOCK_AUDIOBOOKS } from "@/lib/mock/library";
 
 export const metadata: Metadata = {
   title: "Home",
   description: "Continue listening and browse your recent Quiet Library books.",
 };
 
-export default function ApplicationHomePage() {
+export default async function ApplicationHomePage() {
+  const ownedAudiobooks = await getOwnedAudiobooks();
+  const audiobooks = ownedAudiobooks ?? [...MOCK_AUDIOBOOKS];
+  const currentAudiobook = audiobooks[0];
   const currentDate = new Intl.DateTimeFormat("en", {
     day: "numeric",
     month: "long",
     weekday: "long",
   }).format(new Date());
+
+  if (!currentAudiobook) {
+    return (
+      <div className="flex flex-col gap-12 py-8 sm:py-10 lg:gap-16 lg:py-12">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex flex-col gap-1">
+            <p className="text-ink-muted text-sm">{currentDate}</p>
+            <h1 className="font-display text-4xl font-semibold sm:text-5xl">
+              Welcome back.
+            </h1>
+          </div>
+        </header>
+        <CollectionState variant="empty" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-12 py-8 sm:py-10 lg:gap-16 lg:py-12">
@@ -39,26 +60,26 @@ export default function ApplicationHomePage() {
         <div className="bg-action/15 absolute -top-24 -right-16 size-72 rounded-full blur-3xl" />
         <div className="hidden w-48 lg:block">
           <BookCover
-            author={CURRENT_AUDIOBOOK.author}
+            author={currentAudiobook.author}
             size="hero"
-            title={CURRENT_AUDIOBOOK.title}
-            tone={CURRENT_AUDIOBOOK.coverTone}
+            title={currentAudiobook.title}
+            tone={currentAudiobook.coverTone}
           />
         </div>
         <div className="relative flex flex-col justify-center gap-6">
           <div className="flex items-start gap-4 lg:hidden">
             <BookCover
-              author={CURRENT_AUDIOBOOK.author}
+              author={currentAudiobook.author}
               size="mini"
-              title={CURRENT_AUDIOBOOK.title}
-              tone={CURRENT_AUDIOBOOK.coverTone}
+              title={currentAudiobook.title}
+              tone={currentAudiobook.coverTone}
             />
             <div>
               <p className="text-action text-xs font-bold tracking-widest uppercase">
                 Continue listening
               </p>
               <h2 className="font-display text-2xl font-semibold">
-                {CURRENT_AUDIOBOOK.title}
+                {currentAudiobook.title}
               </h2>
             </div>
           </div>
@@ -67,25 +88,25 @@ export default function ApplicationHomePage() {
               Continue listening
             </p>
             <h2 className="font-display text-4xl font-semibold">
-              {CURRENT_AUDIOBOOK.title}
+              {currentAudiobook.title}
             </h2>
             <p className="text-paper-elevated/65">
-              {CURRENT_AUDIOBOOK.author} · narrated by{" "}
-              {CURRENT_AUDIOBOOK.narrator}
+              {currentAudiobook.author} · narrated by{" "}
+              {currentAudiobook.narrator}
             </p>
           </div>
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between text-xs">
-              <span>{CURRENT_AUDIOBOOK.currentChapter}</span>
+              <span>{currentAudiobook.currentChapter}</span>
               <span className="text-paper-elevated/60">
-                {CURRENT_AUDIOBOOK.progressLabel}
+                {currentAudiobook.progressLabel}
               </span>
             </div>
             <div
-              aria-label={`${CURRENT_AUDIOBOOK.progressPercent}% listened`}
+              aria-label={`${currentAudiobook.progressPercent}% listened`}
               aria-valuemax={100}
               aria-valuemin={0}
-              aria-valuenow={CURRENT_AUDIOBOOK.progressPercent}
+              aria-valuenow={currentAudiobook.progressPercent}
               className="bg-paper-elevated/20 h-1.5 overflow-hidden rounded-full"
               role="progressbar"
             >
@@ -94,14 +115,14 @@ export default function ApplicationHomePage() {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <ActionLink
-              href={`/app/audiobooks/${CURRENT_AUDIOBOOK.id}`}
+              href={`/app/audiobooks/${currentAudiobook.id}`}
               icon={<Icon className="size-4" name="play" />}
             >
               Resume listening
             </ActionLink>
             <Link
               className="text-paper-elevated hover:text-action focus-visible:ring-action rounded-control inline-flex min-h-11 items-center px-3 text-sm font-semibold focus-visible:ring-2 focus-visible:outline-none"
-              href={`/app/audiobooks/${CURRENT_AUDIOBOOK.id}`}
+              href={`/app/audiobooks/${currentAudiobook.id}`}
             >
               View book details
             </Link>
@@ -120,7 +141,7 @@ export default function ApplicationHomePage() {
           title="From your shelves"
         />
         <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {MOCK_AUDIOBOOKS.slice(1).map((audiobook) => (
+          {audiobooks.slice(1).map((audiobook) => (
             <BookCard audiobook={audiobook} key={audiobook.id} />
           ))}
         </div>
@@ -136,8 +157,8 @@ export default function ApplicationHomePage() {
               Add another story
             </h2>
             <p className="text-ink-muted text-sm leading-relaxed">
-              Rescan or change your Audiobooks folder without granting access to
-              the rest of your Drive.
+              Choose more files or change your Audiobooks folder without
+              granting access to the rest of your Drive.
             </p>
           </div>
         </div>

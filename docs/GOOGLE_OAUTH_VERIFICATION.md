@@ -21,9 +21,10 @@ state, offline access, and exact redirect-URI matching.
 
 The `drive.file` scope limits the app to files and folders the user opens or
 selects for the app. The user explicitly selects one folder named `Audiobooks`;
-Quiet Library stores its immutable folder ID and scans supported audio in that
-folder and its subfolders. It never searches the rest of Drive and never
-modifies or deletes source audio.
+Quiet Library stores its immutable folder ID and opens Picker there. The user
+then selects each audiobook file the app may access. Preview and confirmed
+import both verify that every file is directly inside that folder. The app never
+searches the rest of Drive and never modifies or deletes source audio.
 
 ## Verification Evidence
 
@@ -32,7 +33,7 @@ Prepare a short unedited recording that shows:
 1. Google identity sign-in.
 2. The separate Drive connection action and consent screen.
 3. Picker selection of a folder named `Audiobooks` initiated by the user.
-4. A nested audio file appearing after a folder scan and playing successfully.
+4. An explicitly selected audio file appearing in review and playing successfully.
 5. Drive disconnection and confirmed revocation.
 6. Account deletion while the original Drive file remains intact.
 

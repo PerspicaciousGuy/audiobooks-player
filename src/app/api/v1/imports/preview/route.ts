@@ -3,7 +3,6 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getValidDriveCredentials } from "@/features/drive/access";
 import {
   DriveFolderError,
-  listAudiobooksFolderFileIds,
   validateAudiobooksFolder,
 } from "@/features/drive/folders";
 import { getDriveConnection } from "@/features/drive/repository";
@@ -33,35 +32,25 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const parsed = importPreviewSourceSchema.safeParse(body);
 
   if (!parsed.success) {
-    return problemResponse("Select a valid Audiobooks folder.", 400);
+    return problemResponse("Select valid audiobook files.", 400);
   }
 
   try {
     const credentials = await getValidDriveCredentials(access.identity.id);
-    let fileIds: string[];
+    const connection = await getDriveConnection(access.identity.id);
 
-    if ("folderId" in parsed.data) {
-      const connection = await getDriveConnection(access.identity.id);
-
-      if (connection?.selectedFolder?.id !== parsed.data.folderId) {
-        return problemResponse("Choose the Audiobooks folder again.", 409);
-      }
-
-      await validateAudiobooksFolder(
-        parsed.data.folderId,
-        credentials.accessToken,
-      );
-      fileIds = await listAudiobooksFolderFileIds(
-        parsed.data.folderId,
-        credentials.accessToken,
-      );
-    } else {
-      fileIds = parsed.data.fileIds;
+    if (connection?.selectedFolder?.id !== parsed.data.folderId) {
+      return problemResponse("Choose the Audiobooks folder again.", 409);
     }
 
-    const validation = await validateSelectedDriveFiles(
-      fileIds,
+    await validateAudiobooksFolder(
+      parsed.data.folderId,
       credentials.accessToken,
+    );
+    const validation = await validateSelectedDriveFiles(
+      parsed.data.fileIds,
+      credentials.accessToken,
+      parsed.data.folderId,
     );
     const duplicateFileIds = await getDuplicateDriveFileIds(
       access.identity.id,

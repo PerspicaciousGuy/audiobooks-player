@@ -84,7 +84,7 @@ export default function AppShell({
         >
           {children}
         </main>
-        <NowPlayingBar />
+        <NowPlayingBar showIdlePreview={!identity} />
         <ApplicationNavigation mode="mobile" />
       </div>
     </PlayerProvider>

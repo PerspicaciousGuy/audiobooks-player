@@ -7,14 +7,10 @@ import { parseId3Metadata } from "./id3";
 
 const MAX_METADATA_BYTES = 1024 * 1024;
 const SUPPORTED_EXTENSIONS = new Set(["aac", "m4a", "m4b", "mp3", "ogg"]);
-const SUPPORTED_MIME_TYPES = new Set([
+const SUPPORTED_APPLICATION_MIME_TYPES = new Set([
+  "application/mp4",
   "application/octet-stream",
-  "audio/aac",
-  "audio/mp4",
-  "audio/mpeg",
-  "audio/ogg",
-  "audio/x-m4a",
-  "audio/x-m4b",
+  "application/x-m4b",
 ]);
 
 export function isSupportedDriveAudioFile(
@@ -22,11 +18,14 @@ export function isSupportedDriveAudioFile(
   mimeType: string,
 ): boolean {
   const extension = name.split(".").pop()?.toLowerCase();
+  const normalizedMimeType = mimeType.split(";", 1)[0]?.trim().toLowerCase();
 
   return Boolean(
     extension &&
     SUPPORTED_EXTENSIONS.has(extension) &&
-    SUPPORTED_MIME_TYPES.has(mimeType),
+    normalizedMimeType &&
+    (normalizedMimeType.startsWith("audio/") ||
+      SUPPORTED_APPLICATION_MIME_TYPES.has(normalizedMimeType)),
   );
 }
 
@@ -36,6 +35,7 @@ const driveFileSchema = z.object({
   md5Checksum: z.string().optional(),
   mimeType: z.string().min(1),
   name: z.string().min(1),
+  parents: z.array(z.string().min(1)).default([]),
   size: z.string().regex(/^\d+$/).optional(),
   trashed: z.boolean().default(false),
   version: z.string().optional(),
@@ -52,7 +52,7 @@ function driveFileUrl(fileId: string, altMedia = false): string {
   } else {
     url.searchParams.set(
       "fields",
-      "id,name,mimeType,size,md5Checksum,version,trashed,capabilities(canDownload)",
+      "id,name,mimeType,size,md5Checksum,version,parents,trashed,capabilities(canDownload)",
     );
   }
 
@@ -96,6 +96,7 @@ function reject(
 export async function validateDriveFile(
   driveFileId: string,
   accessToken: string,
+  folderId?: string,
 ): Promise<ValidatedDriveFile | RejectedDriveFile> {
   const response = await fetch(driveFileUrl(driveFileId), {
     cache: "no-store",
@@ -115,6 +116,14 @@ export async function validateDriveFile(
 
   const file = parsed.data;
   const extension = file.name.split(".").pop()?.toLowerCase();
+
+  if (folderId && !file.parents.includes(folderId)) {
+    return reject(
+      driveFileId,
+      "The file is not directly inside the selected Audiobooks folder.",
+      file.name,
+    );
+  }
 
   if (
     file.trashed ||
