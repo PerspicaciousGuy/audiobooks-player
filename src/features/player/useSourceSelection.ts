@@ -14,7 +14,7 @@ interface SourceSelectionInput {
   audioRef: RefObject<HTMLAudioElement | null>;
   audiobook: Audiobook | undefined;
   defaultPlaybackRate: number;
-  pendingSeekRef: MutableRefObject<number>;
+  pendingSeekRef: MutableRefObject<number | null>;
   setAudiobook: Dispatch<SetStateAction<Audiobook | undefined>>;
   setError: Dispatch<SetStateAction<string | undefined>>;
   setPlaybackRate: Dispatch<SetStateAction<number>>;

@@ -90,8 +90,14 @@ describe("PlayerAudio", () => {
     expect(audio.playbackRate).toBe(1.5);
     expect(audio.volume).toBe(0.75);
     expect(play).toHaveBeenCalledOnce();
-    expect(pendingSeekRef.current).toBe(0);
+    expect(pendingSeekRef.current).toBeNull();
     expect(shouldAutoplayRef.current).toBe(false);
+
+    audio.currentTime = 15;
+    fireEvent.canPlay(audio);
+
+    expect(audio.currentTime).toBe(15);
+    expect(play).toHaveBeenCalledOnce();
   });
 
   it("pauses and clears an end-of-chapter sleep timer", () => {

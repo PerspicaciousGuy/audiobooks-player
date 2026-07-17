@@ -54,34 +54,42 @@ user's browser profile.
 
 ## Last Action
 
-Corrected the remaining authenticated Drive playback proxy behavior after M4B
-import succeeded but both MP3 and M4B still failed to play. Stream and download
-ownership lookups now reuse the Supabase client that already passed identity
-verification and quota enforcement instead of opening a second session client.
+Fixed the player-side cause of playback remaining at `0:00` after Chrome had
+successfully loaded and decoded the complete authenticated audio response. The
+hidden audio element previously applied `pendingSeekRef` on every `canplay`
+event, then stored `0` in that ref. A later `canplay` event could therefore seek
+an already-started track back to zero.
 
-The stream route now preserves one exact, validated browser Range rather than
-truncating explicit requests, and requests without Range receive a normal full
-`200` response. Both forms pipe the Drive body without buffering it in
-application memory. README and security boundaries now describe the actual
-single-range behavior. No credential, environment, migration, dependency,
-imported record, or Drive file changed.
+Pending seek state now uses `null` to represent “no pending seek,” and the value
+is consumed only once for each selected source. Component and provider
+regressions fire `canplay` a second time after advancing playback and prove the
+timeline is not reset and autoplay is not repeated. No stream API, credential,
+environment, migration, dependency, imported record, or Drive file changed.
 
 ## In Progress
 
-None. The standards-correct authenticated stream proxy passes the complete
-local verifier and is ready for Koyeb deployment.
+None. The one-time pending-seek fix passes the complete local verifier and is
+ready for Koyeb deployment.
 
 ## Pending
 
-- Deploy this build and verify the existing imported M4B and MP3 through real
-  hosted playback and seeking; re-import is not required.
+- Deploy this build and verify that the existing imported M4B and MP3 timelines
+  advance and produce audio; re-import is not required.
+- Sign out and sign back in once to rotate the Supabase session cookie that was
+  visible in a diagnostic screenshot.
 - Complete the remaining hosted progress, bookmark, reconnect/revoke,
   account-deletion, PWA, and physical-device evidence flows.
 
 ## Verification
 
-- `npm run verify` passes: formatting, ESLint, strict TypeScript, all 80 tests in
+- `npm run verify` passes: formatting, ESLint, strict TypeScript, all 81 tests in
   27 files, the 29-route production build, and production HTTP smoke.
+- Chrome's hosted request evidence confirms `Range: bytes=0-` receives `206`,
+  exact full-file `Content-Range` and `Content-Length`, `audio/mpeg`, and a
+  browser-decoded duration. This isolates the stuck `0:00` state to the player.
+- Player regressions confirm the pending seek becomes `null` after first use; a
+  later `canplay` event preserves an advanced current time and does not invoke
+  autoplay again.
 - The hosted private quota table records two successful authenticated `stream`
   authorizations for the affected account. This rules out missing cookies,
   login state, and pre-route authentication as the playback failure.
@@ -196,8 +204,8 @@ Follow `docs/DEPLOYMENT.md` for the release order,
   subfolders must be moved directly into `Audiobooks` for this first explicit
   selection flow; larger-library batching and nested-folder authorization are
   not implemented yet.
-- The corrected exact-Range and no-Range response paths still require the
-  hosted, authenticated playback check after Koyeb deploys this build.
+- The one-time pending-seek behavior still requires the hosted playback check
+  after Koyeb deploys this build.
 - `IMPLEMENTATION_PLAN.md` exceeds the generic 500-line guideline but remains a
   single cohesive planning artifact.
 
@@ -205,8 +213,8 @@ Follow `docs/DEPLOYMENT.md` for the release order,
 
 - Created: `src/features/library/mapper.test.ts` for the persisted Postgres
   timestamp regression.
-- Modified: stream and download routes; owned-file lookup; Range parsing and
-  tests; README; security policy; and this handoff.
+- Modified: player provider, hidden audio element, source-selection ref types,
+  player component/provider tests, and this handoff.
 - Currently Being Edited: none after verification.
 - Planned to Edit: only targeted findings from hosted M4B/MP3 playback and the
   remaining device release checks.

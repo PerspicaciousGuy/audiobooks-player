@@ -17,7 +17,7 @@ interface PlayerAudioProps {
   onPlaying: (isPlaying: boolean) => void;
   onSourceEnded: () => void;
   onSleepComplete: () => void;
-  pendingSeekRef: MutableRefObject<number>;
+  pendingSeekRef: MutableRefObject<number | null>;
   playbackRate: number;
   shouldAutoplayRef: MutableRefObject<boolean>;
   sleepMode: SleepMode;
@@ -48,8 +48,11 @@ export default function PlayerAudio({
       onCanPlay={() => {
         const audio = audioRef.current;
         if (!audio) return;
-        audio.currentTime = pendingSeekRef.current;
-        pendingSeekRef.current = 0;
+        const pendingSeek = pendingSeekRef.current;
+        if (pendingSeek !== null) {
+          audio.currentTime = pendingSeek;
+          pendingSeekRef.current = null;
+        }
         audio.playbackRate = playbackRate;
         audio.volume = volume;
         if (shouldAutoplayRef.current) void audio.play().catch(onError);

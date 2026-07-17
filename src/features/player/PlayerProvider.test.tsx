@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { Audiobook } from "@/types/audiobook";
@@ -55,7 +55,10 @@ function PlayerProbe() {
   );
 }
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 describe("PlayerProvider", () => {
   it("owns one audio element and resolves an owned stream URL", async () => {
@@ -64,18 +67,16 @@ describe("PlayerProvider", () => {
     );
     vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue();
 
-    const { container } = render(
+    const { container, getByRole } = render(
       <PlayerProvider preferences={DEFAULT_USER_PREFERENCES}>
         <PlayerProbe />
       </PlayerProvider>,
     );
 
-    fireEvent.click(screen.getByRole("button"));
+    fireEvent.click(getByRole("button"));
 
     await waitFor(() => {
-      expect(screen.getByRole("button").textContent).toContain(
-        "The Dispossessed",
-      );
+      expect(getByRole("button").textContent).toContain("The Dispossessed");
     });
     const audioElements = container.querySelectorAll("audio");
     expect(audioElements).toHaveLength(1);
@@ -84,5 +85,34 @@ describe("PlayerProvider", () => {
         "/api/v1/audiobooks/10000000-0000-0000-0000-000000000001/stream?fileId=20000000-0000-0000-0000-000000000002",
       );
     });
+  });
+
+  it("applies a pending seek only on the first canplay event", async () => {
+    vi.spyOn(HTMLMediaElement.prototype, "load").mockImplementation(
+      () => undefined,
+    );
+    const play = vi
+      .spyOn(HTMLMediaElement.prototype, "play")
+      .mockResolvedValue();
+
+    const { container, getByRole } = render(
+      <PlayerProvider preferences={DEFAULT_USER_PREFERENCES}>
+        <PlayerProbe />
+      </PlayerProvider>,
+    );
+
+    fireEvent.click(getByRole("button"));
+    const audio = container.querySelector("audio");
+    expect(audio).not.toBeNull();
+    if (!audio) return;
+    await waitFor(() => expect(audio.src).toContain("/stream?fileId="));
+
+    fireEvent.canPlay(audio);
+    expect(play).toHaveBeenCalledOnce();
+    audio.currentTime = 5;
+    fireEvent.canPlay(audio);
+
+    expect(audio.currentTime).toBe(5);
+    expect(play).toHaveBeenCalledOnce();
   });
 });

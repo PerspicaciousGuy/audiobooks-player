@@ -31,7 +31,7 @@ export default function PlayerProvider({
   preferences,
 }: PlayerProviderProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const pendingSeekRef = useRef(0);
+  const pendingSeekRef = useRef<number | null>(null);
   const shouldAutoplayRef = useRef(false);
   const [audiobook, setAudiobook] = useState<Audiobook>();
   const [sourceIndex, setSourceIndex] = useState(0);
