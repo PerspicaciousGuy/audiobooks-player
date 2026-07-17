@@ -54,37 +54,47 @@ user's browser profile.
 
 ## Last Action
 
-Added the Google Picker App ID required by the existing `drive.file` scope using
-the browser-safe numeric Cloud project number. Picker now allows exactly one
-folder selection, sends the current origin, and accepts only a folder named
-`Audiobooks`.
+Diagnosed the remaining hosted Google Picker error without changing application
+or secret files. The implementation already supplies the developer key, Cloud
+project number, OAuth token, and current origin in the documented Picker flow.
+The local environment values have the expected key/project formats with no
+quotes or surrounding whitespace.
 
-Added an authenticated, same-origin folder-selection API and a recursive,
-bounded server-side scan that returns only supported audio inside the saved
-folder or its subfolders. The immutable folder ID and name are stored on the
-existing protected `drive_connections` row. Import confirmation still
-re-fetches and validates every file, so Picker and list metadata remain
-untrusted.
+A redacted Google API probe initially returned `403 PERMISSION_DENIED` with
+Drive file listing explicitly blocked. After Google Drive API was added to the
+same browser key, the probe changed to the expected file-permission response,
+confirming that Google now accepts the key and both API restrictions. The
+embedded Picker still shows its generic developer-key screen, so Chrome's
+blocked third-party-cookie/extension path is now the active check. The active
+Chrome profile is not available to this agent for direct inspection.
 
-Created and applied migration
-`20260717012455_add_drive_audiobooks_folder.sql` with its rollback. The linked
-Supabase project confirms both nullable columns and all three pairing/name/
-length constraints. Existing RLS and the absence of browser table grants remain
-unchanged. Updated product, privacy, deployment, and OAuth verification copy to
-describe the folder-only access model.
+After third-party cookies were allowed, Picker opened and saved the selected
+`Audiobooks` folder. Its recursive scan returned no files even though the folder
+contains an M4B. Review found that the current OAuth scope is `drive.file`,
+which grants per-file access to files explicitly opened or shared through
+Picker; selecting a folder does not grant blanket access to its pre-existing
+children. The detector also lacks some valid M4B MIME aliases, but MIME
+expansion alone cannot make an unauthorized child visible to the Drive list
+call.
 
 ## In Progress
 
-Feature commit `190562b` is on `main`, and the folder migration is applied to
-linked Supabase. Koyeb still needs `NEXT_PUBLIC_GOOGLE_CLOUD_PROJECT_NUMBER`, a
-fresh build, and an authenticated folder-selection/import check.
+The application code and folder migration are on `main`, Google accepts the
+configured browser key, and Picker works with third-party cookies allowed. Work
+is paused before changing the import model: retain least-privilege `drive.file`
+with explicit multi-file selection, or request broader read-only Drive access
+for automatic recursive folder scanning. Mock content also still needs to be
+limited to preview mode after that choice.
 
 ## Pending
 
-- Add `NEXT_PUBLIC_GOOGLE_CLOUD_PROJECT_NUMBER` to Koyeb, manually redeploy, and
-  verify Picker opens without the developer-key error.
-- Select a real `Audiobooks` folder containing nested audio and complete the
-  preview/import/playback flow.
+- Choose the Drive access model: recommended explicit multi-file Picker
+  selection under `drive.file`, or broader read-only Drive access with OAuth
+  verification/privacy implications for automatic folder scanning.
+- Expand accepted M4B MIME aliases and add regression tests after the access
+  model is chosen.
+- Keep mock books/player content only in preview mode; authenticated Supabase
+  users should see owned books or an empty state.
 - Complete the remaining hosted progress, bookmark, reconnect/revoke,
   account-deletion, PWA, and physical-device evidence flows.
 
@@ -100,6 +110,10 @@ fresh build, and an authenticated folder-selection/import check.
   known warnings below, and performance advisors report no issues.
 - GitHub Actions run `29547931919` passed both Quality and Build and the
   disposable Migration and RLS Tests job, including rollback/recovery.
+- The local Picker key is present, has the expected 39-character `AIza` format,
+  and contains no quotes/outer whitespace. After adding Google Drive API to the
+  key, its redacted probe reaches the Drive service and returns a file-level
+  permission response instead of an API-key or API-restriction error.
 - A production server deliberately reached through `http://localhost:3100`
   returns the canonical Koyeb origin from Drive start, Drive callback, and
   Supabase callback routes. This reproduces the proxy-origin condition without
