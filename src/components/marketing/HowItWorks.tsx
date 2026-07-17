@@ -18,10 +18,10 @@ const STEPS: readonly Step[] = [
   },
   {
     description:
-      "Use Google Picker to choose only the audiobook files you want. Quiet Library never scans your whole Drive.",
+      "Create an Audiobooks folder, select it once with Google Picker, and scan only that folder and its subfolders.",
     icon: "upload",
     number: "02",
-    title: "Choose your books",
+    title: "Choose your folder",
   },
   {
     description:

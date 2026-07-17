@@ -8,14 +8,13 @@ import { MOCK_AUDIOBOOKS } from "@/lib/mock/library";
 
 export const metadata: Metadata = {
   title: "Add audiobooks",
-  description:
-    "Connect Google Drive and choose audiobook files for your library.",
+  description: "Connect Google Drive and choose your Audiobooks folder.",
 };
 
 const ONBOARDING_STEPS = [
   { label: "Sign in", status: "complete" },
   { label: "Connect Drive", status: "current" },
-  { label: "Choose books", status: "upcoming" },
+  { label: "Choose folder", status: "upcoming" },
 ] as const;
 
 interface OnboardingPageProps {
@@ -24,7 +23,8 @@ interface OnboardingPageProps {
 
 const DRIVE_STATUS_MESSAGES: Record<string, string> = {
   cancelled: "Drive authorization was cancelled. Nothing was imported.",
-  connected: "Google Drive is connected. You can now choose audiobook files.",
+  connected:
+    "Google Drive is connected. You can now choose your Audiobooks folder.",
   failed: "Drive could not be connected. Please try again.",
   "invalid-state":
     "That authorization attempt expired or could not be verified. Please retry.",
@@ -50,8 +50,8 @@ export default async function OnboardingPage({
           Bring in the stories you own
         </h1>
         <p className="text-ink-muted leading-relaxed">
-          Google Drive access is separate from sign-in. You choose individual
-          files, and can disconnect that access whenever you want.
+          Google Drive access is separate from sign-in. You choose one folder
+          named Audiobooks, and can disconnect that access whenever you want.
         </p>
       </header>
 
@@ -100,15 +100,15 @@ export default async function OnboardingPage({
               Connect Google Drive
             </h2>
             <p className="text-ink-muted max-w-2xl leading-relaxed">
-              Quiet Library will ask for permission to access only files you
-              select through Google Picker. It cannot browse or change the rest
-              of your Drive.
+              Quiet Library will ask you to select a folder named Audiobooks
+              through Google Picker. It scans only supported audio inside that
+              folder and its subfolders.
             </p>
           </div>
           <ul className="flex flex-col gap-3 text-sm">
             <li className="flex items-center gap-3">
               <Icon className="text-success size-4" name="check" />
-              Select individual MP3, M4B, M4A, AAC, or OGG files
+              Keep MP3, M4B, M4A, AAC, or OGG files in one folder
             </li>
             <li className="flex items-center gap-3">
               <Icon className="text-success size-4" name="check" />
@@ -129,7 +129,7 @@ export default async function OnboardingPage({
             }
           >
             {drive === "connected"
-              ? "Choose audiobook files"
+              ? "Choose Audiobooks folder"
               : isDriveEnabled
                 ? "Continue with Google Drive"
                 : "Explore the UI preview"}

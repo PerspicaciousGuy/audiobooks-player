@@ -1,22 +1,26 @@
 import { z } from "zod";
 
-const driveFileIdSchema = z
-  .string()
-  .min(10)
-  .max(255)
-  .regex(/^[A-Za-z0-9_-]+$/);
+import {
+  driveItemIdSchema,
+  selectedDriveFolderInputSchema,
+} from "@/features/drive/contracts";
 
 export const selectedDriveFilesSchema = z.object({
   fileIds: z
-    .array(driveFileIdSchema)
+    .array(driveItemIdSchema)
     .min(1)
     .max(25)
     .refine((ids) => new Set(ids).size === ids.length, "Duplicate file IDs."),
 });
 
+export const importPreviewSourceSchema = z.union([
+  selectedDriveFilesSchema,
+  selectedDriveFolderInputSchema,
+]);
+
 export const importGroupInputSchema = z.object({
   author: z.string().trim().max(300).default(""),
-  fileIds: z.array(driveFileIdSchema).min(1).max(25),
+  fileIds: z.array(driveItemIdSchema).min(1).max(25),
   narrator: z.string().trim().max(300).default(""),
   series: z.string().trim().max(300).default(""),
   seriesPosition: z.number().positive().max(99_999).nullable().default(null),

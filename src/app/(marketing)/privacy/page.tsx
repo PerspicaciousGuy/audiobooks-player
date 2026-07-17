@@ -11,23 +11,25 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <LegalPage
-      description="How Quiet Library handles identity, selected files, listening data, and device downloads."
+      description="How Quiet Library handles identity, your selected folder, listening data, and device downloads."
       title="Privacy by design"
     >
       <section>
         <h2>Your audio stays yours</h2>
         <p>
-          Quiet Library streams only the Google Drive files you explicitly
-          select. Source audio is not copied into Quiet Library server storage.
-          Offline copies remain on the device where you requested them.
+          Quiet Library scans only the Google Drive folder you explicitly select
+          and streams supported audio found there. Source audio is not copied
+          into Quiet Library server storage. Offline copies remain on the device
+          where you requested them.
         </p>
       </section>
       <section>
         <h2>What the service stores</h2>
         <p>
-          The service stores account details, selected-file metadata, book
-          organization, listening progress, bookmarks, preferences, and an
-          encrypted credential needed to access the files you selected.
+          The service stores account details, the selected folder ID, imported
+          file metadata, book organization, listening progress, bookmarks,
+          preferences, and an encrypted credential needed to access the files
+          you selected.
         </p>
       </section>
       <section>

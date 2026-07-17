@@ -75,7 +75,7 @@ export default async function SettingsPage({
               <p className="text-ink-muted mt-1 text-xs leading-relaxed">
                 {isDriveConnected
                   ? "The server holds an encrypted credential. Source audio remains in Drive."
-                  : "Connect only when you are ready to choose audiobook files."}
+                  : "Connect only when you are ready to choose your Audiobooks folder."}
               </p>
             </div>
           </div>

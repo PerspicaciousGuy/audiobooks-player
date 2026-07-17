@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(12);
+select plan(14);
 
 insert into auth.users (
   instance_id,
@@ -155,6 +155,20 @@ select ok(
 select ok(
   not has_table_privilege('authenticated', 'public.drive_connections', 'select'),
   'authenticated callers have no Drive credential table grant'
+);
+
+select has_column(
+  'public',
+  'drive_connections',
+  'selected_folder_id',
+  'Drive connections persist the selected folder ID'
+);
+
+select has_column(
+  'public',
+  'drive_connections',
+  'selected_folder_name',
+  'Drive connections persist the selected folder name'
 );
 
 select ok(

@@ -11,6 +11,7 @@ const environmentSchema = z
     databaseUrl: z.string().min(1).optional(),
     driveIntegrationMode: z.enum(["disabled", "google"]),
     driveTokenEncryptionKey: z.string().min(1).optional(),
+    googleCloudProjectNumber: z.string().regex(/^\d+$/).optional(),
     googleDriveClientId: z.string().min(1).optional(),
     googleDriveClientSecret: z.string().min(1).optional(),
     googlePickerApiKey: z.string().min(1).optional(),
@@ -39,6 +40,7 @@ const environmentSchema = z
 
     if (value.driveIntegrationMode === "google") {
       const requiredDriveValues = [
+        ["googleCloudProjectNumber", value.googleCloudProjectNumber],
         ["googleDriveClientId", value.googleDriveClientId],
         ["googleDriveClientSecret", value.googleDriveClientSecret],
         ["googlePickerApiKey", value.googlePickerApiKey],
@@ -63,6 +65,8 @@ export const environment = environmentSchema.parse({
   databaseUrl: process.env.DATABASE_URL || undefined,
   driveIntegrationMode: process.env.DRIVE_INTEGRATION_MODE ?? "disabled",
   driveTokenEncryptionKey: process.env.DRIVE_TOKEN_ENCRYPTION_KEY || undefined,
+  googleCloudProjectNumber:
+    process.env.NEXT_PUBLIC_GOOGLE_CLOUD_PROJECT_NUMBER || undefined,
   googleDriveClientId: process.env.GOOGLE_DRIVE_CLIENT_ID || undefined,
   googleDriveClientSecret: process.env.GOOGLE_DRIVE_CLIENT_SECRET || undefined,
   googlePickerApiKey:

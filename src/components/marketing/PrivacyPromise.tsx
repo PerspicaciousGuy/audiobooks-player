@@ -3,7 +3,7 @@ import Icon from "@/components/ui/Icon";
 
 const PRIVACY_POINTS = [
   "Your audiobook audio remains in Google Drive.",
-  "You choose every file Quiet Library can access.",
+  "You choose the Audiobooks folder Quiet Library can scan.",
   "Disconnecting removes stored Drive credentials.",
 ] as const;
 

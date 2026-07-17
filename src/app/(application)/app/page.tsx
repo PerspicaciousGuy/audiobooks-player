@@ -136,13 +136,13 @@ export default function ApplicationHomePage() {
               Add another story
             </h2>
             <p className="text-ink-muted text-sm leading-relaxed">
-              Select more audiobook files without granting access to the rest of
-              your Drive.
+              Rescan or change your Audiobooks folder without granting access to
+              the rest of your Drive.
             </p>
           </div>
         </div>
         <ActionLink href="/app/onboarding" variant="secondary">
-          Choose Drive files
+          Open Drive import
         </ActionLink>
       </section>
     </div>

@@ -1,17 +1,19 @@
 import "server-only";
 
 import type { DriveCredentialEnvelope } from "./tokenEncryption";
+import type { SelectedDriveFolder } from "./contracts";
 
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
 const CONNECTION_COLUMNS =
-  "user_id, google_subject, granted_scopes, encrypted_token_envelope, access_token_expires_at, status";
+  "user_id, google_subject, granted_scopes, encrypted_token_envelope, access_token_expires_at, status, selected_folder_id, selected_folder_name";
 
 export interface DriveConnection {
   accessTokenExpiresAt: string | null;
   encryptedTokenEnvelope: unknown;
   googleSubject: string;
   grantedScopes: string[];
+  selectedFolder: SelectedDriveFolder | null;
   status: string;
   userId: string;
 }
@@ -35,6 +37,14 @@ function mapConnection(row: Record<string, unknown>): DriveConnection {
     grantedScopes: Array.isArray(row.granted_scopes)
       ? row.granted_scopes.map(String)
       : [],
+    selectedFolder:
+      typeof row.selected_folder_id === "string" &&
+      typeof row.selected_folder_name === "string"
+        ? {
+            id: row.selected_folder_id,
+            name: row.selected_folder_name,
+          }
+        : null,
     status: String(row.status),
     userId: String(row.user_id),
   };
@@ -86,6 +96,34 @@ export async function saveDriveConnection(
 
   if (error) {
     throw new Error("Unable to save the Drive connection.", { cause: error });
+  }
+}
+
+export async function saveSelectedDriveFolder(
+  userId: string,
+  folder: SelectedDriveFolder,
+): Promise<void> {
+  const supabase = createAdminSupabaseClient();
+
+  if (!supabase) {
+    throw new Error("The server database connection is unavailable.");
+  }
+
+  const { data, error } = await supabase
+    .from("drive_connections")
+    .update({
+      selected_folder_id: folder.id,
+      selected_folder_name: folder.name,
+    })
+    .eq("user_id", userId)
+    .eq("status", "active")
+    .select("user_id")
+    .maybeSingle();
+
+  if (error || !data) {
+    throw new Error("Unable to save the selected Drive folder.", {
+      cause: error,
+    });
   }
 }
 

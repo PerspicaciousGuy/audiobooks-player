@@ -9,7 +9,8 @@ without sign-in.
 
 Enable the Google Drive API and Google Picker API. Restrict the browser Picker
 API key by production web origin and API. Never expose the Drive OAuth client
-secret.
+secret. Configure the numeric Google Cloud project number as the Picker App ID;
+Google requires it when using the `drive.file` scope.
 
 ## Separate Grants
 
@@ -18,9 +19,11 @@ server-owned authorization-code flow separately requests
 `https://www.googleapis.com/auth/drive.file` with PKCE, user-bound expiring
 state, offline access, and exact redirect-URI matching.
 
-The `drive.file` scope limits the app to files the user opens or selects for the
-app. Product copy and the verification video should show that selection is
-explicit and that Quiet Library never modifies or deletes source audio.
+The `drive.file` scope limits the app to files and folders the user opens or
+selects for the app. The user explicitly selects one folder named `Audiobooks`;
+Quiet Library stores its immutable folder ID and scans supported audio in that
+folder and its subfolders. It never searches the rest of Drive and never
+modifies or deletes source audio.
 
 ## Verification Evidence
 
@@ -28,8 +31,8 @@ Prepare a short unedited recording that shows:
 
 1. Google identity sign-in.
 2. The separate Drive connection action and consent screen.
-3. Picker selection initiated by the user.
-4. Playback of the selected file.
+3. Picker selection of a folder named `Audiobooks` initiated by the user.
+4. A nested audio file appearing after a folder scan and playing successfully.
 5. Drive disconnection and confirmed revocation.
 6. Account deletion while the original Drive file remains intact.
 

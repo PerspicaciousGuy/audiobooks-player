@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { confirmImportSchema, selectedDriveFilesSchema } from "./contracts";
+import {
+  confirmImportSchema,
+  importPreviewSourceSchema,
+  selectedDriveFilesSchema,
+} from "./contracts";
 
 const FILE_ID = "drive-file-id-0001";
 
@@ -10,6 +14,13 @@ describe("import API contracts", () => {
       selectedDriveFilesSchema.safeParse({ fileIds: [FILE_ID, FILE_ID] })
         .success,
     ).toBe(false);
+  });
+
+  it("accepts a selected Audiobooks folder ID", () => {
+    expect(
+      importPreviewSourceSchema.safeParse({ folderId: "audiobooks-folder-id" })
+        .success,
+    ).toBe(true);
   });
 
   it("accepts reviewed metadata without trusting file metadata", () => {

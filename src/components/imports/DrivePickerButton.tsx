@@ -2,20 +2,19 @@
 
 import { useState } from "react";
 
+import {
+  GOOGLE_DRIVE_FOLDER_MIME_TYPE,
+  type SelectedDriveFolder,
+} from "@/features/drive/contracts";
+
 const PICKER_SCRIPT_ID = "google-picker-api";
-const AUDIO_MIME_TYPES = [
-  "audio/aac",
-  "audio/mp4",
-  "audio/mpeg",
-  "audio/ogg",
-  "audio/x-m4a",
-  "audio/x-m4b",
-].join(",");
 
 interface DrivePickerButtonProps {
   apiKey: string;
   disabled?: boolean;
-  onFilesPicked: (fileIds: string[]) => Promise<void>;
+  hasSelectedFolder: boolean;
+  onFolderPicked: (folder: SelectedDriveFolder) => Promise<void>;
+  projectNumber: string;
 }
 
 function loadPickerApi(): Promise<void> {
@@ -64,7 +63,9 @@ async function fetchPickerToken(): Promise<string> {
 export default function DrivePickerButton({
   apiKey,
   disabled = false,
-  onFilesPicked,
+  hasSelectedFolder,
+  onFolderPicked,
+  projectNumber,
 }: DrivePickerButtonProps) {
   const [isOpening, setIsOpening] = useState(false);
   const [error, setError] = useState<string>();
@@ -85,20 +86,22 @@ export default function DrivePickerButton({
       }
 
       const view = new pickerApi.DocsView();
-      view.setMimeTypes(AUDIO_MIME_TYPES);
+      view.setMimeTypes(GOOGLE_DRIVE_FOLDER_MIME_TYPE);
+      view.setIncludeFolders(true);
+      view.setSelectFolderEnabled(true);
       const picker = new pickerApi.PickerBuilder()
         .addView(view)
-        .enableFeature(pickerApi.Feature.MULTISELECT_ENABLED)
+        .setAppId(projectNumber)
         .setOAuthToken(accessToken)
         .setDeveloperKey(apiKey)
+        .setOrigin(window.location.origin)
         .setCallback((data) => {
           if (data.action !== pickerApi.Action.PICKED) return;
-          const fileIds =
-            data.docs?.flatMap((document) =>
-              document.id ? [document.id] : [],
-            ) ?? [];
+          const folder = data.docs?.[0];
 
-          if (fileIds.length > 0) void onFilesPicked(fileIds);
+          if (folder?.id && folder.name) {
+            void onFolderPicked({ id: folder.id, name: folder.name });
+          }
         })
         .build();
       picker.setVisible(true);
@@ -119,7 +122,11 @@ export default function DrivePickerButton({
         onClick={() => void handleOpenPicker()}
         type="button"
       >
-        {isOpening ? "Opening Google Picker…" : "Choose files from Drive"}
+        {isOpening
+          ? "Opening Google Picker…"
+          : hasSelectedFolder
+            ? "Change Audiobooks folder"
+            : "Choose Audiobooks folder"}
       </button>
       {error ? (
         <p className="text-danger text-sm" role="alert">

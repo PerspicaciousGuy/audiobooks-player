@@ -17,6 +17,19 @@ const SUPPORTED_MIME_TYPES = new Set([
   "audio/x-m4b",
 ]);
 
+export function isSupportedDriveAudioFile(
+  name: string,
+  mimeType: string,
+): boolean {
+  const extension = name.split(".").pop()?.toLowerCase();
+
+  return Boolean(
+    extension &&
+    SUPPORTED_EXTENSIONS.has(extension) &&
+    SUPPORTED_MIME_TYPES.has(mimeType),
+  );
+}
+
 const driveFileSchema = z.object({
   capabilities: z.object({ canDownload: z.boolean() }).optional(),
   id: z.string().min(1),
@@ -108,8 +121,7 @@ export async function validateDriveFile(
     file.capabilities?.canDownload !== true ||
     !file.size ||
     !extension ||
-    !SUPPORTED_EXTENSIONS.has(extension) ||
-    !SUPPORTED_MIME_TYPES.has(file.mimeType)
+    !isSupportedDriveAudioFile(file.name, file.mimeType)
   ) {
     return reject(
       driveFileId,

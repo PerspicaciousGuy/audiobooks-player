@@ -52,8 +52,9 @@ demonstration and staging validation without creating a paid commitment.
 `NEXT_PUBLIC_APP_URL` must be the exact canonical HTTPS origin. Set Supabase
 Auth mode, URL, publishable key, and server secret key together. Set Drive mode,
 client ID, client secret, Picker API key, and a canonical base64 32-byte token
-encryption key together. Restrict the Picker API key to the production origin
-and the required Google API.
+encryption key together. Set `NEXT_PUBLIC_GOOGLE_CLOUD_PROJECT_NUMBER` to the
+numeric project number used by the OAuth client and Picker API key. Restrict the
+Picker API key to the production origin and the required Google API.
 
 Rotating `DRIVE_TOKEN_ENCRYPTION_KEY` requires a planned credential-envelope
 migration or reconnecting every Drive account. Replacing it without migration
@@ -65,7 +66,8 @@ makes stored credentials unreadable.
   service-worker headers.
 - Verify sign-in, session refresh, sign-out, Drive consent, reconnect, and
   revoke with a test Google account.
-- Import supported and rejected files; confirm no source file is modified.
+- Select a folder named `Audiobooks`, scan supported and rejected files from a
+  nested folder, and confirm no source file is modified.
 - Seek near the start and end of a large file and confirm exact `206` ranges.
 - Exercise multi-file playback, two-session progress conflicts, and bookmarks.
 - Install the PWA, download a complete book, enter airplane mode, and play every

@@ -10,6 +10,8 @@ declare global {
         Action: { PICKED: string };
         DocsView: new () => {
           setMimeTypes: (mimeTypes: string) => unknown;
+          setIncludeFolders: (included: boolean) => unknown;
+          setSelectFolderEnabled: (enabled: boolean) => unknown;
         };
         Feature: { MULTISELECT_ENABLED: string };
         PickerBuilder: new () => GooglePickerBuilder;
@@ -24,10 +26,12 @@ declare global {
     setCallback: (
       callback: (data: {
         action?: string;
-        docs?: Array<{ id?: string }>;
+        docs?: Array<{ id?: string; name?: string }>;
       }) => void,
     ) => GooglePickerBuilder;
+    setAppId: (appId: string) => GooglePickerBuilder;
     setDeveloperKey: (key: string) => GooglePickerBuilder;
     setOAuthToken: (token: string) => GooglePickerBuilder;
+    setOrigin: (origin: string) => GooglePickerBuilder;
   }
 }
