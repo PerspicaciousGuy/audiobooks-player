@@ -27,9 +27,10 @@ user's browser profile.
 - Phase 2 provides Supabase SSR authentication, normalized/RLS-protected data,
   and a separate user-bound Drive OAuth flow with PKCE, exact scopes, encrypted
   credentials, reconnect, and revoke-before-delete.
-- Phase 3 provides explicit Google Picker selection, server-side Drive
-  validation, bounded ID3/chapter parsing, editable grouping, duplicate checks,
-  transactional import, and real library reads.
+- Phase 3 provides one-time `Audiobooks` folder selection through Google
+  Picker, recursive folder-only scanning, server-side Drive validation, bounded
+  ID3/chapter parsing, editable grouping, duplicate checks, transactional
+  import, and real library reads.
 - Phase 4 provides an authenticated owned-file Range proxy and one shared audio
   engine with seeking, chapters, multi-file continuation, rate, volume, Media
   Session, and sleep timers.
@@ -53,52 +54,52 @@ user's browser profile.
 
 ## Last Action
 
-Corrected the earlier localhost diagnosis after the user reproduced the issue
-with `?drive=connected`. Live response headers proved that Koyeb presents route
-handlers with an internal `https://localhost:3000` request URL. The Supabase
-callback, Drive start, and Drive callback routes used that proxy URL as their
-redirect base even though the configured OAuth callback sent to Google was
-correct. All three now construct redirects from the validated canonical
-`NEXT_PUBLIC_APP_URL`; signed redirect paths remain constrained to this origin.
-Regression tests cover the Koyeb origin and external-path rejection.
+Added the Google Picker App ID required by the existing `drive.file` scope using
+the browser-safe numeric Cloud project number. Picker now allows exactly one
+folder selection, sends the current origin, and accepts only a folder named
+`Audiobooks`.
 
-Fixed the CI installer mismatch by pinning both GitHub jobs to the repository's
-declared npm `11.6.1`. Corrected the rate-limit pgTAP signature and made the
-initial-schema fixture counts independent of real hosted users. Added and
-applied migration `20260716062426_restrict_rls_auto_enable_execution`, which
-keeps the `ensure_rls` event trigger intact while removing direct anonymous and
-authenticated RPC execution of its SECURITY DEFINER function. The migration is
-conditional because this hosted-project helper is absent from clean local
-Supabase stacks.
+Added an authenticated, same-origin folder-selection API and a recursive,
+bounded server-side scan that returns only supported audio inside the saved
+folder or its subfolders. The immutable folder ID and name are stored on the
+existing protected `drive_connections` row. Import confirmation still
+re-fetches and validates every file, so Picker and list metadata remain
+untrusted.
 
-Added `scripts/database-recovery.mjs` and its CI command. It verifies that every
-migration has exactly one rollback, applies the rollback set in reverse order,
-proves the application relations were removed, resets to the forward migration
-set, and reruns the pgTAP/RLS suite. The local application verification passes;
-the destructive database portion passes on its disposable GitHub runner.
-
-Classified the existing free Koyeb/Supabase deployment as portfolio staging and
-documented finite retention. Staging accepts the provider's seven-day Koyeb and
-one-day Supabase log windows plus 30-day encrypted pre-migration exports.
-Production requires paid/equivalent infrastructure with at least seven days of
-logs, seven daily restore points, and 30-day encrypted pre-release exports.
+Created and applied migration
+`20260717012455_add_drive_audiobooks_folder.sql` with its rollback. The linked
+Supabase project confirms both nullable columns and all three pairing/name/
+length constraints. Existing RLS and the absence of browser table grants remain
+unchanged. Updated product, privacy, deployment, and OAuth verification copy to
+describe the folder-only access model.
 
 ## In Progress
 
-The canonical OAuth redirect fix is deployed and verified from live Koyeb
-headers. The user's authenticated Drive connection retry is the next check;
-later hosted browser and physical-device release evidence remains.
+Feature commit `190562b` is on `main`, and the folder migration is applied to
+linked Supabase. Koyeb still needs `NEXT_PUBLIC_GOOGLE_CLOUD_PROJECT_NUMBER`, a
+fresh build, and an authenticated folder-selection/import check.
 
 ## Pending
 
-- Complete the real hosted Google sign-in, Drive consent/import, playback,
-  progress, bookmark, reconnect/revoke, account-deletion, PWA, and physical
-  device evidence flows.
+- Add `NEXT_PUBLIC_GOOGLE_CLOUD_PROJECT_NUMBER` to Koyeb, manually redeploy, and
+  verify Picker opens without the developer-key error.
+- Select a real `Audiobooks` folder containing nested audio and complete the
+  preview/import/playback flow.
+- Complete the remaining hosted progress, bookmark, reconnect/revoke,
+  account-deletion, PWA, and physical-device evidence flows.
 
 ## Verification
 
-- `npm run verify`: formatting, ESLint, strict TypeScript, 66 tests in 25 files,
-  the 28-route production build, and the production HTTP smoke check pass.
+- `npm run verify`: formatting, ESLint, strict TypeScript, 71 tests in 26 files,
+  the 29-route production build, and the production HTTP smoke check pass.
+- Focused folder/import tests pass for exact-name validation, recursive nested
+  audio discovery, unsupported-file filtering, and the 25-file safety limit.
+- Linked Supabase migration history includes
+  `20260717012455_add_drive_audiobooks_folder`; direct catalog queries confirm
+  both columns and all three constraints. Security advisors retain only the two
+  known warnings below, and performance advisors report no issues.
+- GitHub Actions run `29547931919` passed both Quality and Build and the
+  disposable Migration and RLS Tests job, including rollback/recovery.
 - A production server deliberately reached through `http://localhost:3100`
   returns the canonical Koyeb origin from Drive start, Drive callback, and
   Supabase callback routes. This reproduces the proxy-origin condition without
@@ -176,22 +177,24 @@ Follow `docs/DEPLOYMENT.md` for the release order,
   hard `404` requirement is added.
 - Browser codec support varies, especially for OGG and some audiobook formats;
   final capability behavior requires representative devices and files.
+- A single folder scan is intentionally limited to 25 supported audio files and
+  100 folders. Larger-library batching is not implemented yet.
+- Real `drive.file` folder traversal and playback still require the hosted,
+  authenticated Google account check after Koyeb receives the project number.
 - `IMPLEMENTATION_PLAN.md` exceeds the generic 500-line guideline but remains a
   single cohesive planning artifact.
 
 ## Files Status
 
-- Created:
-  `supabase/migrations/20260716062426_restrict_rls_auto_enable_execution.sql`
-  and its matching rollback file, plus `scripts/database-recovery.mjs`.
-- Modified: `.github/workflows/ci.yml`,
-  `package.json`, `docs/DEPLOYMENT.md`, `docs/OPERATIONS.md`,
-  `src/features/auth/redirects.ts`, its regression test, the Supabase callback
-  route, and both Drive OAuth route handlers,
-  `supabase/tests/database/initial_schema.test.sql`,
-  `supabase/tests/database/request_rate_limits.test.sql`, and this handoff.
-- Currently Being Edited: none after the canonical redirect deployment.
-- Planned to Edit: authenticated browser/device findings may identify later
-  targeted changes.
-- Untouched: `.env`, `.env.example`, secret values, existing migration contents,
-  and user Google Drive files.
+- Created: the folder-selection route, Drive folder contracts/scanner/tests,
+  import client helper and selected-folder panel, plus migration
+  `20260717012455_add_drive_audiobooks_folder.sql` and its rollback.
+- Modified: `.env.example`, `README.md`, Drive deployment/OAuth docs, import,
+  onboarding, home, settings, privacy, and marketing copy/components; Drive
+  repository, import contracts/validation/preview route, Picker types and
+  environment validation; the initial-schema pgTAP test; and this handoff.
+- Currently Being Edited: none after verification.
+- Planned to Edit: only targeted findings from the hosted folder import and
+  remaining device release checks.
+- Untouched: `.env`, secret values, existing migration contents, imported book
+  records, and user Google Drive files.
